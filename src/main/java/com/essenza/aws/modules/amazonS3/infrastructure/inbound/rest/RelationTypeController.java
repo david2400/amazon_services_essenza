@@ -1,10 +1,10 @@
 package com.essenza.aws.modules.amazonS3.infrastructure.inbound.rest;
 
-import com.essenza.aws.modules.amazonS3.application.input.relationtype.CreateRelationTypeUseCase;
-import com.essenza.aws.modules.amazonS3.application.input.relationtype.DeleteRelationTypeUseCase;
-import com.essenza.aws.modules.amazonS3.application.input.relationtype.FindRelationTypeByIdUseCase;
-import com.essenza.aws.modules.amazonS3.application.input.relationtype.FindRelationTypesUseCase;
-import com.essenza.aws.modules.amazonS3.application.input.relationtype.UpdateRelationTypeUseCase;
+import com.essenza.aws.modules.amazonS3.application.input.relation_type.CreateRelationTypeUseCase;
+import com.essenza.aws.modules.amazonS3.application.input.relation_type.DeleteRelationTypeUseCase;
+import com.essenza.aws.modules.amazonS3.application.input.relation_type.FindRelationTypeByIdUseCase;
+import com.essenza.aws.modules.amazonS3.application.input.relation_type.FindRelationTypesUseCase;
+import com.essenza.aws.modules.amazonS3.application.input.relation_type.UpdateRelationTypeUseCase;
 import com.essenza.aws.modules.amazonS3.domain.dto.relation_type.CreateRelationTypeDto;
 import com.essenza.aws.modules.amazonS3.domain.dto.relation_type.RelationTypeDto;
 import com.essenza.aws.modules.amazonS3.domain.dto.relation_type.UpdateRelationTypeDto;
