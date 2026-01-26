@@ -9,7 +9,6 @@ import java.util.List;
 @Repository
 public interface JpaFilesAmazonS3Repository extends JpaRepository<FilesAmazonS3Entity, Long> {
     List<FilesAmazonS3Entity> findByDocumentId(Integer documentId);
-    List<FilesAmazonS3Entity> findByRelationTypeId(Integer relationTypeId);
     List<FilesAmazonS3Entity> findByBucketAwsId(Long bucketAwsId);
     List<FilesAmazonS3Entity> findByParentId(Long parentId);
     List<FilesAmazonS3Entity> findByKeyAndBucketAwsId(String key, Long bucketAwsId);

@@ -15,14 +15,14 @@ public interface BuketAwsMapper {
 
     List<BuketAwsDto> toDtoList(List<BuketAwsEntity> entities);
 
-    @Mapping(target = "id", ignore = true)
+//    @Mapping(target = "id", ignore = true)
     @Mapping(target = "usrCrea", ignore = true)
     @Mapping(target = "usrMod", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
     BuketAwsEntity toEntity(CreateBuketAwsDto dto);
 
-    @Mapping(target = "id", ignore = true)
+//    @Mapping(target = "id", ignore = true)
     @Mapping(target = "usrCrea", ignore = true)
     @Mapping(target = "usrMod", ignore = true)
     @Mapping(target = "createdAt", ignore = true)

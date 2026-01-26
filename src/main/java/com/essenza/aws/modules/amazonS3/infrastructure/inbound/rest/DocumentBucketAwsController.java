@@ -4,6 +4,9 @@ import com.essenza.aws.modules.amazonS3.application.input.document_bucket_aws.*;
 import com.essenza.aws.modules.amazonS3.domain.dto.document_bucket_aws.CreateDocumentBucketAwsDto;
 import com.essenza.aws.modules.amazonS3.domain.dto.document_bucket_aws.DocumentBucketAwsDto;
 import com.essenza.aws.modules.amazonS3.domain.dto.document_bucket_aws.UpdateDocumentBucketAwsDto;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Description;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -12,9 +15,11 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.Optional;
 
+@RequiredArgsConstructor
 @RestController
 @RequestMapping("/document_bucket_aws")
 @Description("Relación entre documentos y buckets de AWS")
+@Tag(name = "Amazon S3 - Documentos por bucket")
 public class DocumentBucketAwsController {
 
     private final CreateDocumentBucketAwsUseCase createUseCase;
@@ -25,29 +30,31 @@ public class DocumentBucketAwsController {
     private final FindDocumentBucketAwsByDocumentIdUseCase findByDocumentIdUseCase;
     private final FindDocumentBucketAwsByBucketAwsIdUseCase findByBucketAwsIdUseCase;
 
-    public DocumentBucketAwsController(CreateDocumentBucketAwsUseCase createUseCase,
-                                       UpdateDocumentBucketAwsUseCase updateUseCase,
-                                       DeleteDocumentBucketAwsUseCase deleteUseCase,
-                                       FindDocumentBucketAwsByIdUseCase findByIdUseCase,
-                                       FindDocumentBucketAwsUseCase findAllUseCase,
-                                       FindDocumentBucketAwsByDocumentIdUseCase findByDocumentIdUseCase,
-                                       FindDocumentBucketAwsByBucketAwsIdUseCase findByBucketAwsIdUseCase) {
-        this.createUseCase = createUseCase;
-        this.updateUseCase = updateUseCase;
-        this.deleteUseCase = deleteUseCase;
-        this.findByIdUseCase = findByIdUseCase;
-        this.findAllUseCase = findAllUseCase;
-        this.findByDocumentIdUseCase = findByDocumentIdUseCase;
-        this.findByBucketAwsIdUseCase = findByBucketAwsIdUseCase;
-    }
+//    public DocumentBucketAwsController(CreateDocumentBucketAwsUseCase createUseCase,
+//                                       UpdateDocumentBucketAwsUseCase updateUseCase,
+//                                       DeleteDocumentBucketAwsUseCase deleteUseCase,
+//                                       FindDocumentBucketAwsByIdUseCase findByIdUseCase,
+//                                       FindDocumentBucketAwsUseCase findAllUseCase,
+//                                       FindDocumentBucketAwsByDocumentIdUseCase findByDocumentIdUseCase,
+//                                       FindDocumentBucketAwsByBucketAwsIdUseCase findByBucketAwsIdUseCase) {
+//        this.createUseCase = createUseCase;
+//        this.updateUseCase = updateUseCase;
+//        this.deleteUseCase = deleteUseCase;
+//        this.findByIdUseCase = findByIdUseCase;
+//        this.findAllUseCase = findAllUseCase;
+//        this.findByDocumentIdUseCase = findByDocumentIdUseCase;
+//        this.findByBucketAwsIdUseCase = findByBucketAwsIdUseCase;
+//    }
 
     @PostMapping
+    @Operation(summary = "Crear relación documento-bucket")
     public ResponseEntity<DocumentBucketAwsDto> create(@RequestBody CreateDocumentBucketAwsDto dto) {
         DocumentBucketAwsDto created = createUseCase.create(dto);
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
 
     @PutMapping("/{id}")
+    @Operation(summary = "Actualizar relación documento-bucket")
     public ResponseEntity<DocumentBucketAwsDto> update(@PathVariable("id") Long id,
                                                        @RequestBody UpdateDocumentBucketAwsDto dto) {
         DocumentBucketAwsDto updated = updateUseCase.update(id, dto);
@@ -55,18 +62,21 @@ public class DocumentBucketAwsController {
     }
 
     @DeleteMapping("/{id}")
+    @Operation(summary = "Eliminar relación documento-bucket")
     public ResponseEntity<Void> delete(@PathVariable("id") Long id) {
         boolean deleted = deleteUseCase.deleteById(id);
         return deleted ? ResponseEntity.noContent().build() : ResponseEntity.status(HttpStatus.NOT_FOUND).build();
     }
 
     @GetMapping("/{id}")
+    @Operation(summary = "Consultar relación por ID")
     public ResponseEntity<DocumentBucketAwsDto> findById(@PathVariable("id") Long id) {
         Optional<DocumentBucketAwsDto> result = findByIdUseCase.findById(id);
         return result.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND).build());
     }
 
     @GetMapping
+    @Operation(summary = "Listar relaciones filtrando por documento o bucket")
     public ResponseEntity<List<DocumentBucketAwsDto>> findAll(
             @RequestParam(value = "document_id", required = false) Integer documentId,
             @RequestParam(value = "bucket_aws_id", required = false) Long bucketAwsId) {

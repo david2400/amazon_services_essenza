@@ -60,11 +60,6 @@ public class FilesAmazonS3RepositoryAdapter implements FilesAmazonS3Repository {
     }
 
     @Override
-    public List<FilesAmazonS3Dto> findByRelationTypeId(Integer relationTypeId) {
-        return jpaRepository.findByRelationTypeId(relationTypeId).stream().map(mapper::toDto).toList();
-    }
-
-    @Override
     public List<FilesAmazonS3Dto> findByBucketAwsId(Long bucketAwsId) {
         return jpaRepository.findByBucketAwsId(bucketAwsId).stream().map(mapper::toDto).toList();
     }

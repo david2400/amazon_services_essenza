@@ -26,10 +26,6 @@ public class CreateFilesAmazonS3Dto  extends AuditInfoDto {
     @Positive
     private Integer documentId;
 
-    @NotNull
-    @Positive
-    private Integer relationTypeId;
-
     private Date expirationDate;
 
     private String eTag;

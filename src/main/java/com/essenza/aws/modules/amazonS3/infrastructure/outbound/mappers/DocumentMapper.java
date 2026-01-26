@@ -18,7 +18,7 @@ public interface DocumentMapper {
 
     List<DocumentDto> toDtoList(List<DocumentEntity> documentoEntity);
 
-    @Mapping(target = "id", ignore = true)
+//    @Mapping(target = "id", ignore = true)
     @Mapping(target = "usrCrea", ignore = true)
     @Mapping(target = "usrMod", ignore = true)
     @Mapping(target = "createdAt", ignore = true)

@@ -29,16 +29,11 @@ public class FilesAmazonS3Entity extends AuditInfo implements Serializable {
     @Column(name = "file_name")
     String fileName;
 
-    //@NotNull
     @Column(name = "`key`")
     String key;
 
-    //@NotNull
     @Column(name = "document_id")
     Integer documentId;
-
-    @Column(name = "relation_type_id")
-    Integer relationTypeId;
 
     @Column(name = "expiration_date")
     Date expirationDate;

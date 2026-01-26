@@ -5,12 +5,14 @@ import com.essenza.aws.modules.amazonS3.domain.dto.document_bucket_aws.CreateDoc
 import com.essenza.aws.modules.amazonS3.domain.dto.document_bucket_aws.DocumentBucketAwsDto;
 import com.essenza.aws.modules.amazonS3.domain.dto.document_bucket_aws.UpdateDocumentBucketAwsDto;
 import com.essenza.aws.modules.amazonS3.infrastructure.outbound.repositories.document_bucket_aws.DocumentBucketAwsRepositoryAdapter;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
 
+@RequiredArgsConstructor
 @Service
 @Transactional
 public class DocumentBucketAwsServiceImpl implements
@@ -24,9 +26,9 @@ public class DocumentBucketAwsServiceImpl implements
 
     private final DocumentBucketAwsRepositoryAdapter repository;
 
-    public DocumentBucketAwsServiceImpl(DocumentBucketAwsRepositoryAdapter repository) {
-        this.repository = repository;
-    }
+//    public DocumentBucketAwsServiceImpl(DocumentBucketAwsRepositoryAdapter repository) {
+//        this.repository = repository;
+//    }
 
     @Override
     public DocumentBucketAwsDto create(CreateDocumentBucketAwsDto input) {

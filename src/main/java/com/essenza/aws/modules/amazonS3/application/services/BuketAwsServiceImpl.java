@@ -11,12 +11,14 @@ import com.essenza.aws.modules.amazonS3.domain.dto.buketaws.BuketAwsDto;
 import com.essenza.aws.modules.amazonS3.domain.dto.buketaws.CreateBuketAwsDto;
 import com.essenza.aws.modules.amazonS3.domain.dto.buketaws.UpdateBuketAwsDto;
 import com.essenza.aws.modules.amazonS3.infrastructure.outbound.repositories.buketaws.BuketAwsRepositoryAdapter;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
 
+@RequiredArgsConstructor
 @Service
 @Transactional
 public class BuketAwsServiceImpl implements
@@ -30,9 +32,9 @@ public class BuketAwsServiceImpl implements
 
     private final BuketAwsRepositoryAdapter repository;
 
-    public BuketAwsServiceImpl(BuketAwsRepositoryAdapter repository) {
-        this.repository = repository;
-    }
+//    public BuketAwsServiceImpl(BuketAwsRepositoryAdapter repository) {
+//        this.repository = repository;
+//    }
 
     @Override
     public BuketAwsDto create(CreateBuketAwsDto input) {

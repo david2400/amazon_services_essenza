@@ -22,7 +22,6 @@ public interface FilesAmazonS3Repository {
 
     List<FilesAmazonS3Dto> findByDocumentId(Integer documentId);
 
-    List<FilesAmazonS3Dto> findByRelationTypeId(Integer relationTypeId);
 
     List<FilesAmazonS3Dto> findByBucketAwsId(Long bucketAwsId);
 

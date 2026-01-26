@@ -18,7 +18,6 @@ public class FilesAmazonS3Dto extends AuditInfoDto {
     private String fileName;
     private String key;
     private Integer documentId;
-    private Integer relationTypeId;
     private Date expirationDate;
     private String eTag;
     private String route;

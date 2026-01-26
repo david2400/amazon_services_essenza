@@ -14,7 +14,7 @@ public interface FilesAmazonS3Mapper {
 
     List<FilesAmazonS3Dto> toDtoList(List<FilesAmazonS3Entity> entities);
 
-    @Mapping(target = "id", ignore = true)
+//    @Mapping(target = "id", ignore = true)
     @Mapping(target = "usrCrea", ignore = true)
     @Mapping(target = "usrMod", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
