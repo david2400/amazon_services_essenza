@@ -1,6 +1,7 @@
 package com.essenza.aws.modules.amazonSNS.domain.dto.topics;
 
 import com.essenza.aws.shared.common.domain.dto.AuditInfoDto;
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;

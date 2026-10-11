@@ -34,3 +34,7 @@ build/
 
 ### Application Properties ###
 src/main/resources/application.properties
+
+### Secretos locales ###
+config/local-secrets.properties
+.env
