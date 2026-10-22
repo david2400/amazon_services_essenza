@@ -6,6 +6,8 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 
+import java.util.Map;
+
 @Data
 @SuperBuilder
 @NoArgsConstructor
@@ -18,7 +20,7 @@ public class SnsTopicDto extends AuditInfoDto {
     private String policy;
     private Boolean fifoTopic;
     private Boolean contentBasedDeduplication;
-    private String attributesJson;
-    private String tagsJson;
+    private Map<String, String> attributes;
+    private Map<String, String> tags;
     private String status;
 }

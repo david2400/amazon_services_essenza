@@ -9,8 +9,11 @@ import org.mapstruct.ReportingPolicy;
 
 import java.util.List;
 
-@Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE, builder = @Builder(disableBuilder = true))
+@Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE,
+        builder = @Builder(disableBuilder = true), uses = JsonMapConverter.class)
 public interface SnsNotificationMapper {
+
+    @Mapping(target = "messageAttributes", source = "messageAttributesJson")
     SnsNotificationDto toDto(SnsNotificationEntity entity);
 
     List<SnsNotificationDto> toDtoList(List<SnsNotificationEntity> entities);
@@ -21,5 +24,6 @@ public interface SnsNotificationMapper {
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
     @Mapping(target = "deleted", ignore = true)
+    @Mapping(target = "messageAttributesJson", source = "messageAttributes")
     SnsNotificationEntity toEntity(SnsNotificationDto dto);
 }

@@ -5,10 +5,12 @@ import com.essenza.aws.modules.amazonSNS.domain.dto.subscriptions.CreateSnsSubsc
 import com.essenza.aws.modules.amazonSNS.domain.dto.subscriptions.SnsSubscriptionDto;
 import com.essenza.aws.modules.amazonSNS.domain.dto.subscriptions.UpdateSnsSubscriptionDto;
 import com.essenza.aws.modules.amazonSNS.infrastructure.outbound.mappers.SnsSubscriptionMapper;
+import com.essenza.aws.shared.exceptions.NotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
 
-import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -28,7 +30,7 @@ public class SnsSubscriptionRepositoryAdapter implements SnsSubscriptionReposito
     @Override
     public SnsSubscriptionDto update(Long id, UpdateSnsSubscriptionDto input) {
         var entity = jpaRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("SNS Subscription not found"));
+                .orElseThrow(() -> new NotFoundException("SNS Subscription not found with id " + id));
         mapper.updateEntityFromDto(input, entity);
         var updated = jpaRepository.save(entity);
         return mapper.toDto(updated);
@@ -49,8 +51,8 @@ public class SnsSubscriptionRepositoryAdapter implements SnsSubscriptionReposito
     }
 
     @Override
-    public List<SnsSubscriptionDto> findAll() {
-        return mapper.toDtoList(jpaRepository.findAll());
+    public Page<SnsSubscriptionDto> findAll(Pageable pageable) {
+        return jpaRepository.findAll(pageable).map(mapper::toDto);
     }
 
     @Override
@@ -59,7 +61,7 @@ public class SnsSubscriptionRepositoryAdapter implements SnsSubscriptionReposito
     }
 
     @Override
-    public List<SnsSubscriptionDto> findByTopicArn(String topicArn) {
-        return mapper.toDtoList(jpaRepository.findByTopicArn(topicArn));
+    public Page<SnsSubscriptionDto> findByTopicArn(String topicArn, Pageable pageable) {
+        return jpaRepository.findByTopicArn(topicArn, pageable).map(mapper::toDto);
     }
 }

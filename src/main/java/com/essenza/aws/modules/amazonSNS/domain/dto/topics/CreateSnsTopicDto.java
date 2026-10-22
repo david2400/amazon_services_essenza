@@ -9,6 +9,8 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 
+import java.util.Map;
+
 @Data
 @SuperBuilder
 @NoArgsConstructor
@@ -25,8 +27,9 @@ public class CreateSnsTopicDto extends AuditInfoDto {
 
     @Schema(description = "ARN asignado por AWS tras crear el tópico", example = "arn:aws:sns:us-east-1:247455203376:essenza-notifications")
     private String arn;
-    
-    @Schema(description = "Política JSON completa del tópico")
+
+    @Schema(description = "Política JSON completa del tópico (documento IAM válido). Dejar vacío si no aplica",
+            example = "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Principal\":\"*\",\"Action\":\"sns:Publish\",\"Resource\":\"*\"}]}")
     private String policy;
 
     @Schema(description = "Indica si el tópico es FIFO", example = "false")
@@ -35,11 +38,11 @@ public class CreateSnsTopicDto extends AuditInfoDto {
     @Schema(description = "Habilita deduplicación basada en contenido", example = "false")
     private Boolean contentBasedDeduplication;
 
-    @Schema(description = "Mapa JSON de atributos adicionales", example = "{\"TracingConfig\": \"PassThrough\"}")
-    private String attributesJson;
+    @Schema(description = "Atributos adicionales del tópico", example = "{\"TracingConfig\": \"PassThrough\"}")
+    private Map<String, String> attributes;
 
-    @Schema(description = "Mapa JSON de tags para el tópico", example = "{\"env\": \"dev\", \"project\": \"essenza\"}")
-    private String tagsJson;
+    @Schema(description = "Tags para el tópico", example = "{\"env\": \"dev\", \"project\": \"essenza\"}")
+    private Map<String, String> tags;
 
     @Schema(description = "Estado interno del tópico", example = "ACTIVE")
     private String status;

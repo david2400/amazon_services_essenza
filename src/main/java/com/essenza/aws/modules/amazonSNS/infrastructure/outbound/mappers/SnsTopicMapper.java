@@ -14,9 +14,12 @@ import org.mapstruct.ReportingPolicy;
 
 import java.util.List;
 
-@Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE, builder = @Builder(disableBuilder = true))
+@Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE,
+        builder = @Builder(disableBuilder = true), uses = JsonMapConverter.class)
 public interface SnsTopicMapper {
 
+    @Mapping(target = "attributes", source = "attributesJson")
+    @Mapping(target = "tags", source = "tagsJson")
     SnsTopicDto toDto(SnsTopicEntity entity);
 
     List<SnsTopicDto> toDtoList(List<SnsTopicEntity> entities);
@@ -27,6 +30,8 @@ public interface SnsTopicMapper {
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
     @Mapping(target = "deleted", ignore = true)
+    @Mapping(target = "attributesJson", source = "attributes")
+    @Mapping(target = "tagsJson", source = "tags")
     SnsTopicEntity toEntity(CreateSnsTopicDto dto);
 
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
@@ -35,5 +40,7 @@ public interface SnsTopicMapper {
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
     @Mapping(target = "deleted", ignore = true)
+    @Mapping(target = "attributesJson", source = "attributes")
+    @Mapping(target = "tagsJson", source = "tags")
     void updateEntityFromDto(UpdateSnsTopicDto dto, @MappingTarget SnsTopicEntity entity);
 }

@@ -1,5 +1,6 @@
 server:
   port: 8082
+  max-http-request-header-size: 32KB
 
 spring:
   datasource:
@@ -21,9 +22,10 @@ spring:
       enabled: false
 
 aws:
-  access:
-    key:
-      id: ${AWS_ACCESS_KEY_ID}
-  secret:
-    key: ${AWS_SECRET_ACCESS_KEY}
+  access-key-id: ${AWS_ACCESS_KEY_ID:}
+  secret-key: ${AWS_SECRET_ACCESS_KEY:}
   region: ${AWS_REGION:us-east-1}
+  sns:
+    api-call-timeout: 15s
+    api-call-attempt-timeout: 5s
+    max-retries: 3

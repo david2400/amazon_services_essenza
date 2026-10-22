@@ -6,6 +6,8 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 
+import java.util.Map;
+
 @Data
 @SuperBuilder
 @NoArgsConstructor
@@ -15,8 +17,10 @@ public class SnsNotificationDto extends AuditInfoDto {
     private String topicArn;
     private String subject;
     private String message;
-    private String messageAttributesJson;
+    private Map<String, String> messageAttributes;
     private String messageGroupId;
     private String messageDeduplicationId;
+    private String messageId;
     private String status;
+    private String errorMessage;
 }

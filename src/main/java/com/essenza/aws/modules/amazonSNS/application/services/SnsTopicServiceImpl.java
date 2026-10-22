@@ -6,32 +6,36 @@ import com.essenza.aws.modules.amazonSNS.application.input.topics.FindSnsTopicBy
 import com.essenza.aws.modules.amazonSNS.application.input.topics.FindSnsTopicByIdUseCase;
 import com.essenza.aws.modules.amazonSNS.application.input.topics.FindSnsTopicsUseCase;
 import com.essenza.aws.modules.amazonSNS.application.input.topics.UpdateSnsTopicUseCase;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.essenza.aws.modules.amazonSNS.application.output.repository.SnsTopicRepository;
 import com.essenza.aws.modules.amazonSNS.domain.dto.topics.CreateSnsTopicDto;
 import com.essenza.aws.modules.amazonSNS.domain.dto.topics.SnsTopicDto;
 import com.essenza.aws.modules.amazonSNS.domain.dto.topics.UpdateSnsTopicDto;
-import com.essenza.aws.modules.amazonSNS.infrastructure.outbound.repositories.topics.SnsTopicRepositoryAdapter;
+import com.essenza.aws.shared.exceptions.AwsServiceException;
+import com.essenza.aws.shared.exceptions.NotFoundException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 import software.amazon.awssdk.services.sns.SnsClient;
 import software.amazon.awssdk.services.sns.model.CreateTopicRequest;
 import software.amazon.awssdk.services.sns.model.DeleteTopicRequest;
 import software.amazon.awssdk.services.sns.model.SetTopicAttributesRequest;
+import software.amazon.awssdk.services.sns.model.SnsException;
 import software.amazon.awssdk.services.sns.model.Tag;
 
-import java.io.IOException;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
-@Transactional
 public class SnsTopicServiceImpl implements
         CreateSnsTopicUseCase,
         UpdateSnsTopicUseCase,
@@ -40,15 +44,17 @@ public class SnsTopicServiceImpl implements
         FindSnsTopicsUseCase,
         FindSnsTopicByArnUseCase {
 
-    private final SnsTopicRepositoryAdapter repository;
+    private final SnsTopicRepository repository;
     private final SnsClient snsClient;
     private final ObjectMapper objectMapper;
 
     @Override
     public SnsTopicDto create(CreateSnsTopicDto input) {
-        Map<String, String> attributes = buildAttributes(input);
+        validatePolicy(input.getPolicy());
         CreateTopicRequest.Builder requestBuilder = CreateTopicRequest.builder()
                 .name(input.getName());
+
+        Map<String, String> attributes = buildAttributes(input);
         if (!attributes.isEmpty()) {
             requestBuilder.attributes(attributes);
         }
@@ -56,17 +62,26 @@ public class SnsTopicServiceImpl implements
         if (!tags.isEmpty()) {
             requestBuilder.tags(tags);
         }
-        var response = snsClient.createTopic(requestBuilder.build());
+
+        String topicArn;
+        try {
+            topicArn = snsClient.createTopic(requestBuilder.build()).topicArn();
+        } catch (SnsException e) {
+            log.error("Failed to create SNS topic {}: {}", input.getName(), e.awsErrorDetails().errorMessage(), e);
+            throw new AwsServiceException("Failed to create SNS topic: " + e.awsErrorDetails().errorMessage(),
+                    e.awsErrorDetails().errorCode(), e);
+        }
+        log.info("SNS topic created: {} ({})", input.getName(), topicArn);
 
         CreateSnsTopicDto payload = CreateSnsTopicDto.builder()
                 .name(input.getName())
                 .displayName(input.getDisplayName())
-                .arn(response.topicArn())
+                .arn(topicArn)
                 .policy(input.getPolicy())
                 .fifoTopic(input.getFifoTopic())
                 .contentBasedDeduplication(input.getContentBasedDeduplication())
-                .attributesJson(input.getAttributesJson())
-                .tagsJson(input.getTagsJson())
+                .attributes(input.getAttributes())
+                .tags(input.getTags())
                 .status(StringUtils.hasText(input.getStatus()) ? input.getStatus() : "ACTIVE")
                 .build();
 
@@ -76,19 +91,24 @@ public class SnsTopicServiceImpl implements
     @Override
     public SnsTopicDto update(Long id, UpdateSnsTopicDto input) {
         SnsTopicDto current = repository.findById(id)
-                .orElseThrow(() -> new RuntimeException("SNS Topic not found"));
+                .orElseThrow(() -> new NotFoundException("SNS Topic not found with id " + id));
 
-        if (StringUtils.hasText(input.getDisplayName())) {
-            setTopicAttribute(current.getArn(), "DisplayName", input.getDisplayName());
-        }
-        if (StringUtils.hasText(input.getPolicy())) {
-            setTopicAttribute(current.getArn(), "Policy", input.getPolicy());
-        }
-        if (input.getFifoTopic() != null) {
-            setTopicAttribute(current.getArn(), "FifoTopic", input.getFifoTopic().toString());
-        }
-        if (input.getContentBasedDeduplication() != null) {
-            setTopicAttribute(current.getArn(), "ContentBasedDeduplication", input.getContentBasedDeduplication().toString());
+        validatePolicy(input.getPolicy());
+        try {
+            if (StringUtils.hasText(input.getDisplayName())) {
+                setTopicAttribute(current.getArn(), "DisplayName", input.getDisplayName());
+            }
+            if (StringUtils.hasText(input.getPolicy())) {
+                setTopicAttribute(current.getArn(), "Policy", input.getPolicy());
+            }
+            if (!CollectionUtils.isEmpty(input.getAttributes())) {
+                input.getAttributes()
+                        .forEach((name, value) -> setTopicAttribute(current.getArn(), name, value));
+            }
+        } catch (SnsException e) {
+            log.error("Failed to update SNS topic {}: {}", current.getArn(), e.awsErrorDetails().errorMessage(), e);
+            throw new AwsServiceException("Failed to update SNS topic: " + e.awsErrorDetails().errorMessage(),
+                    e.awsErrorDetails().errorCode(), e);
         }
 
         return repository.update(id, input);
@@ -97,8 +117,15 @@ public class SnsTopicServiceImpl implements
     @Override
     public boolean delete(Long id) {
         SnsTopicDto current = repository.findById(id)
-                .orElseThrow(() -> new RuntimeException("SNS Topic not found"));
-        snsClient.deleteTopic(DeleteTopicRequest.builder().topicArn(current.getArn()).build());
+                .orElseThrow(() -> new NotFoundException("SNS Topic not found with id " + id));
+        try {
+            snsClient.deleteTopic(DeleteTopicRequest.builder().topicArn(current.getArn()).build());
+        } catch (SnsException e) {
+            log.error("Failed to delete SNS topic {}: {}", current.getArn(), e.awsErrorDetails().errorMessage(), e);
+            throw new AwsServiceException("Failed to delete SNS topic: " + e.awsErrorDetails().errorMessage(),
+                    e.awsErrorDetails().errorCode(), e);
+        }
+        log.info("SNS topic deleted: {}", current.getArn());
         return repository.deleteById(id);
     }
 
@@ -110,8 +137,8 @@ public class SnsTopicServiceImpl implements
 
     @Override
     @Transactional(readOnly = true)
-    public List<SnsTopicDto> findAll() {
-        return repository.findAll();
+    public Page<SnsTopicDto> findAll(Pageable pageable) {
+        return repository.findAll(pageable);
     }
 
     @Override
@@ -134,29 +161,29 @@ public class SnsTopicServiceImpl implements
         if (Boolean.TRUE.equals(input.getContentBasedDeduplication())) {
             attributes.put("ContentBasedDeduplication", "true");
         }
-        attributes.putAll(parseJsonMap(input.getAttributesJson()));
+        if (!CollectionUtils.isEmpty(input.getAttributes())) {
+            attributes.putAll(input.getAttributes());
+        }
         return attributes;
     }
 
     private List<Tag> buildTags(CreateSnsTopicDto input) {
-        Map<String, String> tagsMap = parseJsonMap(input.getTagsJson());
-        if (tagsMap.isEmpty()) {
-            return Collections.emptyList();
+        if (CollectionUtils.isEmpty(input.getTags())) {
+            return List.of();
         }
-        return tagsMap.entrySet().stream()
+        return input.getTags().entrySet().stream()
                 .map(entry -> Tag.builder().key(entry.getKey()).value(entry.getValue()).build())
                 .toList();
     }
 
-    private Map<String, String> parseJsonMap(String json) {
-        if (!StringUtils.hasText(json)) {
-            return Collections.emptyMap();
+    private void validatePolicy(String policy) {
+        if (!StringUtils.hasText(policy)) {
+            return;
         }
         try {
-            return objectMapper.readValue(json, new TypeReference<Map<String, String>>() {
-            });
-        } catch (IOException e) {
-            throw new RuntimeException("Error parsing SNS topic JSON payload", e);
+            objectMapper.readTree(policy);
+        } catch (Exception e) {
+            throw new IllegalArgumentException("Invalid SNS topic policy: must be a valid IAM policy JSON document");
         }
     }
 

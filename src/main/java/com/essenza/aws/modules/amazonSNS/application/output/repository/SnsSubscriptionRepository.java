@@ -3,8 +3,9 @@ package com.essenza.aws.modules.amazonSNS.application.output.repository;
 import com.essenza.aws.modules.amazonSNS.domain.dto.subscriptions.CreateSnsSubscriptionDto;
 import com.essenza.aws.modules.amazonSNS.domain.dto.subscriptions.SnsSubscriptionDto;
 import com.essenza.aws.modules.amazonSNS.domain.dto.subscriptions.UpdateSnsSubscriptionDto;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
-import java.util.List;
 import java.util.Optional;
 
 public interface SnsSubscriptionRepository {
@@ -16,9 +17,9 @@ public interface SnsSubscriptionRepository {
 
     Optional<SnsSubscriptionDto> findById(Long id);
 
-    List<SnsSubscriptionDto> findAll();
+    Page<SnsSubscriptionDto> findAll(Pageable pageable);
 
     Optional<SnsSubscriptionDto> findBySubscriptionArn(String subscriptionArn);
 
-    List<SnsSubscriptionDto> findByTopicArn(String topicArn);
+    Page<SnsSubscriptionDto> findByTopicArn(String topicArn, Pageable pageable);
 }

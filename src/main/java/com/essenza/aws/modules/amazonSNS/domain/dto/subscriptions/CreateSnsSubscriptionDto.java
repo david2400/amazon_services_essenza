@@ -15,6 +15,7 @@ import lombok.experimental.SuperBuilder;
 @AllArgsConstructor
 public class CreateSnsSubscriptionDto extends AuditInfoDto {
     @NotBlank
+    @Pattern(regexp = "^arn:aws[a-zA-Z-]*:sns:[a-z0-9-]+:\\d{12}:.+$", message = "topicArn must be a valid SNS topic ARN")
     private String topicArn;
 
     @NotBlank

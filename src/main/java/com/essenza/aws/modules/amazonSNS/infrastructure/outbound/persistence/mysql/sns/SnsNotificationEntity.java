@@ -6,12 +6,16 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Index;
 import jakarta.persistence.Table;
 import lombok.Data;
 
 @Data
 @Entity
-@Table(name = "sns_notifications")
+@Table(name = "sns_notifications", indexes = {
+        @Index(name = "idx_sns_notif_topic_arn", columnList = "topic_arn"),
+        @Index(name = "idx_sns_notif_status", columnList = "status")
+})
 public class SnsNotificationEntity extends AuditInfo {
 
     @Id
@@ -37,6 +41,12 @@ public class SnsNotificationEntity extends AuditInfo {
     @Column(name = "message_deduplication_id", length = 128)
     private String messageDeduplicationId;
 
+    @Column(name = "message_id", length = 100)
+    private String messageId;
+
     @Column(name = "status", length = 50)
     private String status;
+
+    @Column(name = "error_message", columnDefinition = "TEXT")
+    private String errorMessage;
 }

@@ -9,6 +9,7 @@ import com.essenza.aws.modules.amazonSNS.application.input.topics.UpdateSnsTopic
 import com.essenza.aws.modules.amazonSNS.domain.dto.topics.CreateSnsTopicDto;
 import com.essenza.aws.modules.amazonSNS.domain.dto.topics.SnsTopicDto;
 import com.essenza.aws.modules.amazonSNS.domain.dto.topics.UpdateSnsTopicDto;
+import com.essenza.aws.shared.exceptions.NotFoundException;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -16,6 +17,10 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springdoc.core.annotations.ParameterObject;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -28,7 +33,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.net.URI;
-import java.util.List;
 
 @RequiredArgsConstructor
 @RestController
@@ -43,25 +47,12 @@ public class SnsTopicController {
     private final FindSnsTopicByIdUseCase findByIdUseCase;
     private final FindSnsTopicByArnUseCase findByArnUseCase;
 
-//    public SnsTopicController(CreateSnsTopicUseCase createUseCase,
-//                              UpdateSnsTopicUseCase updateUseCase,
-//                              DeleteSnsTopicUseCase deleteUseCase,
-//                              FindSnsTopicsUseCase findAllUseCase,
-//                              FindSnsTopicByIdUseCase findByIdUseCase,
-//                              FindSnsTopicByArnUseCase findByArnUseCase) {
-//        this.createUseCase = createUseCase;
-//        this.updateUseCase = updateUseCase;
-//        this.deleteUseCase = deleteUseCase;
-//        this.findAllUseCase = findAllUseCase;
-//        this.findByIdUseCase = findByIdUseCase;
-//        this.findByArnUseCase = findByArnUseCase;
-//    }
-
     @PostMapping
     @Operation(summary = "Crear tópico", description = "Crea un nuevo tópico en Amazon SNS")
     @ApiResponses({
             @ApiResponse(responseCode = "201", description = "Tópico creado correctamente"),
-            @ApiResponse(responseCode = "400", description = "Datos inválidos")
+            @ApiResponse(responseCode = "400", description = "Datos inválidos"),
+            @ApiResponse(responseCode = "502", description = "Error de AWS SNS")
     })
     public ResponseEntity<SnsTopicDto> create(@Valid @RequestBody CreateSnsTopicDto dto) {
         SnsTopicDto created = createUseCase.create(dto);
@@ -90,14 +81,17 @@ public class SnsTopicController {
     }
 
     @GetMapping
-    @Operation(summary = "Listar tópicos", description = "Obtiene todos los tópicos o filtra por ARN")
-    public List<SnsTopicDto> findAll(
+    @Operation(summary = "Listar tópicos", description = "Obtiene todos los tópicos paginados o filtra por ARN")
+    public Page<SnsTopicDto> findAll(
             @Parameter(description = "Filtra por ARN exacto")
-            @RequestParam(value = "arn", required = false) String arn) {
+            @RequestParam(value = "arn", required = false) String arn,
+            @ParameterObject @PageableDefault(size = 20) Pageable pageable) {
         if (arn != null) {
-            return findByArnUseCase.findByArn(arn).map(List::of).orElseGet(List::of);
+            SnsTopicDto topic = findByArnUseCase.findByArn(arn)
+                    .orElseThrow(() -> new NotFoundException("SNS Topic not found with arn " + arn));
+            return new org.springframework.data.domain.PageImpl<>(java.util.List.of(topic), pageable, 1);
         }
-        return findAllUseCase.findAll();
+        return findAllUseCase.findAll(pageable);
     }
 
     @GetMapping("/{id}")

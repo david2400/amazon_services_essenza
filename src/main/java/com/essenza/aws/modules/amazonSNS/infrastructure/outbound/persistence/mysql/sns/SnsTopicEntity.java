@@ -6,12 +6,16 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Index;
 import jakarta.persistence.Table;
 import lombok.Data;
 
 @Data
 @Entity
-@Table(name = "sns_topics")
+@Table(name = "sns_topics", indexes = {
+        @Index(name = "idx_sns_topic_name", columnList = "name"),
+        @Index(name = "idx_sns_topic_status", columnList = "status")
+})
 public class SnsTopicEntity extends AuditInfo {
 
     @Id

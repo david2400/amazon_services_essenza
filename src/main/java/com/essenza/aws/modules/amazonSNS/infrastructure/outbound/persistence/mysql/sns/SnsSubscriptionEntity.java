@@ -6,12 +6,15 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Index;
 import jakarta.persistence.Table;
 import lombok.Data;
 
 @Data
 @Entity
-@Table(name = "sns_subscriptions")
+@Table(name = "sns_subscriptions", indexes = {
+        @Index(name = "idx_sns_sub_topic_arn", columnList = "topic_arn")
+})
 public class SnsSubscriptionEntity extends AuditInfo {
 
     @Id

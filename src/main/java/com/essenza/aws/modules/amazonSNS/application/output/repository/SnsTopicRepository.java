@@ -3,8 +3,9 @@ package com.essenza.aws.modules.amazonSNS.application.output.repository;
 import com.essenza.aws.modules.amazonSNS.domain.dto.topics.CreateSnsTopicDto;
 import com.essenza.aws.modules.amazonSNS.domain.dto.topics.SnsTopicDto;
 import com.essenza.aws.modules.amazonSNS.domain.dto.topics.UpdateSnsTopicDto;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
-import java.util.List;
 import java.util.Optional;
 
 public interface SnsTopicRepository {
@@ -16,7 +17,7 @@ public interface SnsTopicRepository {
 
     Optional<SnsTopicDto> findById(Long id);
 
-    List<SnsTopicDto> findAll();
+    Page<SnsTopicDto> findAll(Pageable pageable);
 
     Optional<SnsTopicDto> findByArn(String arn);
 }

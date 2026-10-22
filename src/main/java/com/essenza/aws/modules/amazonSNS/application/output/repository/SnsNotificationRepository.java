@@ -1,13 +1,13 @@
 package com.essenza.aws.modules.amazonSNS.application.output.repository;
 
 import com.essenza.aws.modules.amazonSNS.domain.dto.notifications.SnsNotificationDto;
-
-import java.util.List;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 public interface SnsNotificationRepository {
     SnsNotificationDto save(SnsNotificationDto input);
 
-    List<SnsNotificationDto> findByTopicArn(String topicArn);
+    Page<SnsNotificationDto> findByTopicArn(String topicArn, Pageable pageable);
 
-    List<SnsNotificationDto> findAll();
+    Page<SnsNotificationDto> findAll(Pageable pageable);
 }

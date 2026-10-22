@@ -4,9 +4,9 @@ import com.essenza.aws.modules.amazonSNS.application.output.repository.SnsNotifi
 import com.essenza.aws.modules.amazonSNS.domain.dto.notifications.SnsNotificationDto;
 import com.essenza.aws.modules.amazonSNS.infrastructure.outbound.mappers.SnsNotificationMapper;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
-
-import java.util.List;
 
 @Repository
 @RequiredArgsConstructor
@@ -23,12 +23,12 @@ public class SnsNotificationRepositoryAdapter implements SnsNotificationReposito
     }
 
     @Override
-    public List<SnsNotificationDto> findByTopicArn(String topicArn) {
-        return mapper.toDtoList(jpaRepository.findByTopicArn(topicArn));
+    public Page<SnsNotificationDto> findByTopicArn(String topicArn, Pageable pageable) {
+        return jpaRepository.findByTopicArn(topicArn, pageable).map(mapper::toDto);
     }
 
     @Override
-    public List<SnsNotificationDto> findAll() {
-        return mapper.toDtoList(jpaRepository.findAll());
+    public Page<SnsNotificationDto> findAll(Pageable pageable) {
+        return jpaRepository.findAll(pageable).map(mapper::toDto);
     }
 }

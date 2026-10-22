@@ -5,10 +5,12 @@ import com.essenza.aws.modules.amazonSNS.domain.dto.topics.CreateSnsTopicDto;
 import com.essenza.aws.modules.amazonSNS.domain.dto.topics.SnsTopicDto;
 import com.essenza.aws.modules.amazonSNS.domain.dto.topics.UpdateSnsTopicDto;
 import com.essenza.aws.modules.amazonSNS.infrastructure.outbound.mappers.SnsTopicMapper;
+import com.essenza.aws.shared.exceptions.NotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
 
-import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -28,7 +30,7 @@ public class SnsTopicRepositoryAdapter implements SnsTopicRepository {
     @Override
     public SnsTopicDto update(Long id, UpdateSnsTopicDto input) {
         var entity = jpaRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("SNS Topic not found"));
+                .orElseThrow(() -> new NotFoundException("SNS Topic not found with id " + id));
         mapper.updateEntityFromDto(input, entity);
         var updated = jpaRepository.save(entity);
         return mapper.toDto(updated);
@@ -49,8 +51,8 @@ public class SnsTopicRepositoryAdapter implements SnsTopicRepository {
     }
 
     @Override
-    public List<SnsTopicDto> findAll() {
-        return mapper.toDtoList(jpaRepository.findAll());
+    public Page<SnsTopicDto> findAll(Pageable pageable) {
+        return jpaRepository.findAll(pageable).map(mapper::toDto);
     }
 
     @Override
