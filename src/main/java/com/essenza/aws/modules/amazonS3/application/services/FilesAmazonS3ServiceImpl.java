@@ -11,7 +11,9 @@ import com.essenza.aws.modules.amazonS3.application.input.files_amazon.ReplaceFi
 import com.essenza.aws.modules.amazonS3.application.input.files_amazon.UpdateDocumentIdUseCase;
 import com.essenza.aws.modules.amazonS3.application.input.files_amazon.UpdateFilesAmazonS3UseCase;
 import com.essenza.aws.modules.amazonS3.application.input.files_amazon.UploadFileUseCase;
+import com.essenza.aws.modules.amazonS3.application.output.repository.BuketAwsRepository;
 import com.essenza.aws.modules.amazonS3.application.output.storage.S3StorageGateway;
+import com.essenza.aws.modules.amazonS3.domain.dto.buketaws.BuketAwsDto;
 import com.essenza.aws.modules.amazonS3.domain.dto.files_amazons3.CreateFilesAmazonS3Dto;
 import com.essenza.aws.modules.amazonS3.domain.dto.files_amazons3.FilesAmazonS3Dto;
 import com.essenza.aws.modules.amazonS3.domain.dto.files_amazons3.UpdateFilesAmazonS3Dto;
@@ -19,6 +21,7 @@ import com.essenza.aws.modules.amazonS3.domain.exception.AmazonS3StorageExceptio
 import com.essenza.aws.modules.amazonS3.domain.model.S3ObjectStream;
 import com.essenza.aws.modules.amazonS3.domain.model.S3UploadResult;
 import com.essenza.aws.modules.amazonS3.domain.exception.ResourceNotFoundException;
+import com.essenza.aws.modules.amazonS3.domain.validation.S3FolderValidator;
 import com.essenza.aws.modules.amazonS3.infrastructure.outbound.mappers.FilesAmazonS3Mapper;
 import com.essenza.aws.modules.amazonS3.infrastructure.outbound.persistence.mysql.amazon.BuketAwsEntity;
 import com.essenza.aws.modules.amazonS3.infrastructure.outbound.persistence.mysql.amazon.FilesAmazonS3Entity;
@@ -34,6 +37,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.time.Duration;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -58,6 +62,8 @@ public class FilesAmazonS3ServiceImpl implements
     private final JpaFilesAmazonS3Repository jpaFilesRepository;
     private final FilesAmazonS3Mapper mapper;
     private final S3StorageGateway storageGateway;
+    /** Puerto de salida: catálogo de buckets registrados (bucket_aws). */
+    private final BuketAwsRepository bucketCatalog;
 
 //    public FilesAmazonS3ServiceImpl(
 //            FilesAmazonS3RepositoryAdapter repository,
@@ -118,6 +124,9 @@ public class FilesAmazonS3ServiceImpl implements
                                    String folder,
                                    CreateFilesAmazonS3Dto meta,
                                    String userId) {
+        S3FolderValidator.validate(folder);
+        validateBucketMatchesRegistry(bucket, meta.getBucketAwsId());
+
         String fileName = buildFileName(file);
         String key = buildObjectKey(folder, fileName);
 
@@ -215,9 +224,23 @@ public class FilesAmazonS3ServiceImpl implements
                 .orElseThrow(() -> new ResourceNotFoundException("Bucket no encontrado con id " + bucketAwsId));
         storageGateway.delete(bucket.getBucketName(), key);
 
-        // Optionally mark deleted in DB here if you have soft delete
-        // For now, just return the matched record mapped to DTO
-        return List.of(mapper.toDto(entity));
+        FilesAmazonS3Dto deleted = mapper.toDto(entity);
+        // Soft delete (@SoftDelete -> deleted = 1): un segundo borrado de la misma clave responde 404.
+        jpaFilesRepository.delete(entity);
+        return List.of(deleted);
+    }
+
+    /**
+     * Evita subir a un bucket distinto del registrado para {@code buket_aws_id}.
+     *
+     * @throws IllegalArgumentException (400) si el id no existe o el bucket no coincide.
+     */
+    private void validateBucketMatchesRegistry(String bucket, Long bucketAwsId) {
+        BuketAwsDto registered = bucketCatalog.findById(bucketAwsId)
+                .orElseThrow(() -> new IllegalArgumentException("buket_aws_id " + bucketAwsId + " no está registrado"));
+        if (!Objects.equals(registered.getBucketName(), bucket)) {
+            throw new IllegalArgumentException("El bucket indicado no corresponde al buket_aws_id " + bucketAwsId);
+        }
     }
 
     private String buildFileName(MultipartFile file) {

@@ -4,7 +4,7 @@ import com.essenza.aws.modules.amazonS3.application.output.storage.S3StorageGate
 import com.essenza.aws.modules.amazonS3.domain.exception.AmazonS3StorageException;
 import com.essenza.aws.modules.amazonS3.domain.model.S3ObjectStream;
 import com.essenza.aws.modules.amazonS3.domain.model.S3UploadResult;
-import lombok.RequiredArgsConstructor;
+import com.essenza.aws.shared.config.AwsProperties;
 import org.springframework.stereotype.Component;
 import software.amazon.awssdk.core.ResponseInputStream;
 import software.amazon.awssdk.core.sync.RequestBody;
@@ -12,25 +12,28 @@ import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
 import software.amazon.awssdk.services.s3.model.GetObjectRequest;
 import software.amazon.awssdk.services.s3.model.GetObjectResponse;
-import software.amazon.awssdk.services.s3.model.GetUrlRequest;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 import software.amazon.awssdk.services.s3.presigner.S3Presigner;
 import software.amazon.awssdk.services.s3.presigner.model.GetObjectPresignRequest;
 
 import java.io.InputStream;
-import java.net.URL;
 import java.time.Duration;
 import java.util.Map;
-import java.util.Optional;
 
-@RequiredArgsConstructor
 @Component
 public class AwsS3StorageGateway implements S3StorageGateway {
 
-    private static final String DEFAULT_CONTENT_TYPE = "application/octet-stream";
-
     private final S3Client s3Client;
     private final S3Presigner s3Presigner;
+    private final AwsProperties awsProperties;
+    private final S3ObjectHeadersPolicy headersPolicy;
+
+    public AwsS3StorageGateway(S3Client s3Client, S3Presigner s3Presigner, AwsProperties awsProperties) {
+        this.s3Client = s3Client;
+        this.s3Presigner = s3Presigner;
+        this.awsProperties = awsProperties;
+        this.headersPolicy = new S3ObjectHeadersPolicy(awsProperties.getS3());
+    }
 
 //    public AwsS3StorageGateway(S3Client s3Client, S3Presigner s3Presigner) {
 //        this.s3Client = s3Client;
@@ -44,23 +47,27 @@ public class AwsS3StorageGateway implements S3StorageGateway {
                                  InputStream content,
                                  long contentLength) {
         try {
-            PutObjectRequest request = PutObjectRequest.builder()
+            PutObjectRequest.Builder request = PutObjectRequest.builder()
                     .bucket(bucket)
                     .key(key)
-                    .contentType(Optional.ofNullable(contentType).orElse(DEFAULT_CONTENT_TYPE))
-                    .build();
+                    .contentType(headersPolicy.resolveContentType(key, contentType));
 
-            var response = s3Client.putObject(request, RequestBody.fromInputStream(content, contentLength));
+            // Solo para prefijos públicos (p. ej. email/imagenes/): el resto de objetos no cambia.
+            String cacheControl = headersPolicy.cacheControlFor(key);
+            if (cacheControl != null) {
+                request.cacheControl(cacheControl);
+            }
+            String contentDisposition = headersPolicy.contentDispositionFor(key);
+            if (contentDisposition != null) {
+                request.contentDisposition(contentDisposition);
+            }
 
-            URL url = s3Client.utilities().getUrl(GetUrlRequest.builder()
-                    .bucket(bucket)
-                    .key(key)
-                    .build());
+            var response = s3Client.putObject(request.build(), RequestBody.fromInputStream(content, contentLength));
 
             return S3UploadResult.builder()
                     .key(key)
                     .eTag(response.eTag())
-                    .url(url.toString())
+                    .url(S3ObjectUrlBuilder.build(bucket, awsProperties.getRegion(), key))
                     .build();
         } catch (Exception e) {
             throw new AmazonS3StorageException("Failed to upload file to S3", e);

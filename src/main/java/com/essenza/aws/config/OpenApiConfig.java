@@ -46,6 +46,16 @@ public class OpenApiConfig {
                 .build();
     }
 
+    @Bean
+    public GroupedOpenApi amazonSqsApi() {
+        return GroupedOpenApi.builder()
+                .group("amazon-sqs")
+                .displayName("Amazon SQS")
+                .packagesToScan("com.essenza.aws.modules.amazonSQS")
+                .pathsToMatch("/api/aws/sqs/**")
+                .build();
+    }
+
     @Controller
     static class SwaggerUiRedirectController {
 

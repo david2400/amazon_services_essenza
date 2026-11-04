@@ -1,31 +1,42 @@
 server:
-  port: 8082
-  max-http-request-header-size: 32KB
+  port: ${SERVER_PORT:8082}
+  max-http-request-header-size: ${SERVER_MAX_HTTP_REQUEST_HEADER_SIZE:32KB}
 
 spring:
+  config:
+    import: optional:file:./.env[.properties]
   datasource:
-    url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/${DB_NAME:amazon}?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+    url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/${DB_NAME:amazon}?createDatabaseIfNotExist=${DB_CREATE_DATABASE_IF_NOT_EXIST:true}&useSSL=${DB_USE_SSL:false}&allowPublicKeyRetrieval=${DB_ALLOW_PUBLIC_KEY_RETRIEVAL:true}&serverTimezone=${DB_SERVER_TIMEZONE:UTC}
     username: ${DB_USERNAME:root}
     password: ${DB_PASSWORD}
-    driver-class-name: com.mysql.cj.jdbc.Driver
+    driver-class-name: ${DB_DRIVER_CLASS_NAME:com.mysql.cj.jdbc.Driver}
 
   jpa:
     hibernate:
-      ddl-auto: update
-    show-sql: true
+      ddl-auto: ${JPA_DDL_AUTO:update}
+    show-sql: ${JPA_SHOW_SQL:true}
     properties:
       hibernate:
-        dialect: org.hibernate.dialect.MySQLDialect
+        dialect: ${JPA_DATABASE_DIALECT:org.hibernate.dialect.MySQLDialect}
 
   docker:
     compose:
-      enabled: false
+      enabled: ${DOCKER_COMPOSE_ENABLED:false}
 
 aws:
   access-key-id: ${AWS_ACCESS_KEY_ID:}
   secret-key: ${AWS_SECRET_ACCESS_KEY:}
   region: ${AWS_REGION:us-east-1}
   sns:
-    api-call-timeout: 15s
-    api-call-attempt-timeout: 5s
-    max-retries: 3
+    api-call-timeout: ${AWS_SNS_API_CALL_TIMEOUT:15s}
+    api-call-attempt-timeout: ${AWS_SNS_API_CALL_ATTEMPT_TIMEOUT:5s}
+    max-retries: ${AWS_SNS_MAX_RETRIES:3}
+  sqs:
+    # Deben superar el long polling maximo de ReceiveMessage (WaitTimeSeconds = 20s)
+    api-call-timeout: ${AWS_SQS_API_CALL_TIMEOUT:30s}
+    api-call-attempt-timeout: ${AWS_SQS_API_CALL_ATTEMPT_TIMEOUT:25s}
+    max-retries: ${AWS_SQS_MAX_RETRIES:3}
+  s3:
+    # Prefijos de clave servidos publicamente (separados por coma). Sus objetos se suben con
+    # Cache-Control de larga duracion y Content-Disposition: inline. El resto del bucket no cambia.
+    prefijos-publicos: ${AWS_S3_PREFIJOS_PUBLICOS:email/imagenes/}
