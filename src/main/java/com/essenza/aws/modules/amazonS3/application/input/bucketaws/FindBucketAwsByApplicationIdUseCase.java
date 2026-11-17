@@ -1,9 +1,9 @@
-package com.essenza.aws.modules.amazonS3.application.input.buketaws;
+package com.essenza.aws.modules.amazonS3.application.input.bucketaws;
 
-import com.essenza.aws.modules.amazonS3.domain.dto.buketaws.BuketAwsDto;
+import com.essenza.aws.modules.amazonS3.domain.dto.bucketaws.BucketAwsDto;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
-import java.util.List;
-
-public interface FindBuketAwsByApplicationIdUseCase {
-    List<BuketAwsDto> findByApplicationId(Integer applicationId);
+public interface FindBucketAwsByApplicationIdUseCase {
+    Page<BucketAwsDto> findByApplicationId(Integer applicationId, Pageable pageable);
 }

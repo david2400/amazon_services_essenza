@@ -5,7 +5,10 @@ import com.essenza.aws.modules.amazonS3.domain.dto.files_amazons3.CreateFilesAma
 import com.essenza.aws.modules.amazonS3.domain.dto.files_amazons3.FilesAmazonS3Dto;
 import com.essenza.aws.modules.amazonS3.domain.dto.files_amazons3.UpdateFilesAmazonS3Dto;
 import com.essenza.aws.modules.amazonS3.infrastructure.outbound.mappers.FilesAmazonS3Mapper;
+import com.essenza.aws.shared.exceptions.NotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -28,7 +31,7 @@ public class FilesAmazonS3RepositoryAdapter implements FilesAmazonS3Repository {
     @Override
     public FilesAmazonS3Dto update(Long id, UpdateFilesAmazonS3Dto dto) {
         var entity = jpaRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("FilesAmazonS3 not found"));
+                .orElseThrow(() -> new NotFoundException("Archivo no encontrado con id " + id));
 
         mapper.updateEntityFromDto(dto, entity);
         var updated = jpaRepository.save(entity);
@@ -50,22 +53,32 @@ public class FilesAmazonS3RepositoryAdapter implements FilesAmazonS3Repository {
     }
 
     @Override
-    public List<FilesAmazonS3Dto> findAll() {
-        return jpaRepository.findAll().stream().map(mapper::toDto).toList();
+    public List<FilesAmazonS3Dto> findByKeyAndBucketAwsId(String key, Long bucketAwsId) {
+        return jpaRepository.findByKeyAndBucketAwsId(key, bucketAwsId).stream().map(mapper::toDto).toList();
     }
 
     @Override
-    public List<FilesAmazonS3Dto> findByDocumentId(Integer documentId) {
-        return jpaRepository.findByDocumentId(documentId).stream().map(mapper::toDto).toList();
+    public long countByS3ObjectId(Long s3ObjectId) {
+        return jpaRepository.countByS3ObjectId(s3ObjectId);
     }
 
     @Override
-    public List<FilesAmazonS3Dto> findByBucketAwsId(Long bucketAwsId) {
-        return jpaRepository.findByBucketAwsId(bucketAwsId).stream().map(mapper::toDto).toList();
+    public Page<FilesAmazonS3Dto> findAll(Pageable pageable) {
+        return jpaRepository.findAll(pageable).map(mapper::toDto);
     }
 
     @Override
-    public List<FilesAmazonS3Dto> findByParentId(Long parentId) {
-        return jpaRepository.findByParentId(parentId).stream().map(mapper::toDto).toList();
+    public Page<FilesAmazonS3Dto> findByDocumentId(Integer documentId, Pageable pageable) {
+        return jpaRepository.findByDocumentId(documentId, pageable).map(mapper::toDto);
+    }
+
+    @Override
+    public Page<FilesAmazonS3Dto> findByBucketAwsId(Long bucketAwsId, Pageable pageable) {
+        return jpaRepository.findByBucketAwsId(bucketAwsId, pageable).map(mapper::toDto);
+    }
+
+    @Override
+    public Page<FilesAmazonS3Dto> findByParentId(Long parentId, Pageable pageable) {
+        return jpaRepository.findByParentId(parentId, pageable).map(mapper::toDto);
     }
 }

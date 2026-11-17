@@ -1,25 +1,28 @@
 package com.essenza.aws.modules.amazonS3.application.output.repository;
 
-import com.essenza.aws.modules.amazonS3.domain.dto.buketaws.BuketAwsDto;
-import com.essenza.aws.modules.amazonS3.domain.dto.buketaws.CreateBuketAwsDto;
-import com.essenza.aws.modules.amazonS3.domain.dto.buketaws.UpdateBuketAwsDto;
+import com.essenza.aws.modules.amazonS3.domain.dto.bucketaws.BucketAwsDto;
+import com.essenza.aws.modules.amazonS3.domain.dto.bucketaws.CreateBucketAwsDto;
+import com.essenza.aws.modules.amazonS3.domain.dto.bucketaws.UpdateBucketAwsDto;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
-import java.util.List;
 import java.util.Optional;
 
-public interface BuketAwsRepository {
+public interface BucketAwsRepository {
 
-    BuketAwsDto create(CreateBuketAwsDto input);
+    BucketAwsDto create(CreateBucketAwsDto input);
 
-    BuketAwsDto update(Long id, UpdateBuketAwsDto input);
+    BucketAwsDto update(Long id, UpdateBucketAwsDto input);
 
     boolean deleteById(Long id);
 
-    Optional<BuketAwsDto> findById(Long id);
+    Optional<BucketAwsDto> findById(Long id);
 
-    List<BuketAwsDto> findAll();
+    Page<BucketAwsDto> findAll(Pageable pageable);
 
-    List<BuketAwsDto> findByApplicationId(Integer applicationId);
+    Page<BucketAwsDto> findByApplicationId(Integer applicationId, Pageable pageable);
 
-    Optional<BuketAwsDto> findByProjectName(String projectName);
+    Optional<BucketAwsDto> findByProjectName(String projectName);
+
+    Optional<BucketAwsDto> findByBucketName(String bucketName);
 }

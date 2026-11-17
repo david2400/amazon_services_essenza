@@ -1,14 +1,18 @@
-package com.essenza.aws.modules.amazonS3.infrastructure.outbound.repositories.buketaws;
+package com.essenza.aws.modules.amazonS3.infrastructure.outbound.repositories.bucketaws;
 
-import com.essenza.aws.modules.amazonS3.infrastructure.outbound.persistence.mysql.amazon.BuketAwsEntity;
+import com.essenza.aws.modules.amazonS3.infrastructure.outbound.persistence.mysql.amazon.BucketAwsEntity;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
-import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface JpaBuketAwsRepository extends JpaRepository<BuketAwsEntity, Long> {
-    List<BuketAwsEntity> findByApplicationId(Integer applicationId);
-    Optional<BuketAwsEntity> findByProjectName(String projectName);
+public interface JpaBucketAwsRepository extends JpaRepository<BucketAwsEntity, Long> {
+    Page<BucketAwsEntity> findByApplicationId(Integer applicationId, Pageable pageable);
+
+    Optional<BucketAwsEntity> findByProjectName(String projectName);
+
+    Optional<BucketAwsEntity> findByBucketName(String bucketName);
 }

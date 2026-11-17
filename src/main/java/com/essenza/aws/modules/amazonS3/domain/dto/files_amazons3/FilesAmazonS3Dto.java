@@ -6,7 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 
-import java.util.Date;
+import java.time.Instant;
 
 @Data
 @SuperBuilder
@@ -18,10 +18,13 @@ public class FilesAmazonS3Dto extends AuditInfoDto {
     private String fileName;
     private String key;
     private Integer documentId;
-    private Date expirationDate;
+    private Instant expirationDate;
     private String eTag;
     private String route;
     private String s3Url;
     private Integer reference;
     private Long bucketAwsId;
+    private Long s3ObjectId;
+    private String contentHash;
+    private Long sizeBytes;
 }

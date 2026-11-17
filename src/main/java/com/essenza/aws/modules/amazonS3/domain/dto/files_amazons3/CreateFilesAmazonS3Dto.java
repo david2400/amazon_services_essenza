@@ -8,25 +8,24 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 
-import java.util.Date;
+import java.time.Instant;
 
 @Data
 @SuperBuilder
 @NoArgsConstructor
 @AllArgsConstructor
-public class CreateFilesAmazonS3Dto  extends AuditInfoDto {
+public class CreateFilesAmazonS3Dto extends AuditInfoDto {
     private Long parentId;
 
     private String fileName;
 
-    @NotNull
+    /** Se genera en el servicio (folder + UUID); no es obligatorio en la entrada. */
     private String key;
 
-    @NotNull
     @Positive
     private Integer documentId;
 
-    private Date expirationDate;
+    private Instant expirationDate;
 
     private String eTag;
 
@@ -39,4 +38,12 @@ public class CreateFilesAmazonS3Dto  extends AuditInfoDto {
     @NotNull
     @Positive
     private Long bucketAwsId;
+
+    /** Uso interno: referencia al objeto físico en s3_objects (deduplicación). */
+    private Long s3ObjectId;
+
+    /** Uso interno: SHA-256 del contenido y tamaño en bytes. */
+    private String contentHash;
+
+    private Long sizeBytes;
 }

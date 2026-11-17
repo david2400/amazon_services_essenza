@@ -1,7 +1,5 @@
 package com.essenza.aws.modules.amazonS3.infrastructure.inbound.rest;
 
-import com.essenza.aws.modules.amazonS3.domain.exception.AmazonS3StorageException;
-import com.essenza.aws.modules.amazonS3.domain.exception.ResourceNotFoundException;
 import com.essenza.aws.shared.exceptions.GlobalExceptionHandler.ErrorResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.Ordered;
@@ -16,29 +14,19 @@ import software.amazon.awssdk.services.s3.model.S3Exception;
 import java.time.Instant;
 
 /**
- * Traduce las excepciones del módulo S3 a respuestas HTTP. Tiene prioridad sobre el
- * {@code GlobalExceptionHandler} (que responde 500 genérico a todo lo que no conoce) y solo aplica
- * a los controllers de este módulo. Nunca expone trazas ni mensajes internos del SDK.
+ * Red de seguridad para excepciones del SDK de S3 que no hayan sido traducidas por
+ * {@code AwsS3StorageGateway} (que las convierte en {@code AwsServiceException} → 502 o
+ * {@code NotFoundException} → 404). Tiene prioridad sobre el {@code GlobalExceptionHandler}
+ * y nunca expone trazas ni mensajes internos del SDK.
  */
 @Slf4j
 @Order(Ordered.HIGHEST_PRECEDENCE)
 @RestControllerAdvice(basePackages = "com.essenza.aws.modules.amazonS3")
 public class AmazonS3ExceptionHandler {
 
-    @ExceptionHandler(ResourceNotFoundException.class)
-    public ResponseEntity<ErrorResponse> handleNotFound(ResourceNotFoundException ex) {
-        return build(HttpStatus.NOT_FOUND, ex.getMessage());
-    }
-
     @ExceptionHandler(NoSuchKeyException.class)
     public ResponseEntity<ErrorResponse> handleNoSuchKey(NoSuchKeyException ex) {
         return build(HttpStatus.NOT_FOUND, "El archivo no existe en Amazon S3");
-    }
-
-    @ExceptionHandler(AmazonS3StorageException.class)
-    public ResponseEntity<ErrorResponse> handleStorage(AmazonS3StorageException ex) {
-        log.error("Error de Amazon S3: {}", ex.getMessage(), ex);
-        return build(HttpStatus.BAD_GATEWAY, "Error al comunicarse con Amazon S3: " + ex.getMessage());
     }
 
     @ExceptionHandler(S3Exception.class)

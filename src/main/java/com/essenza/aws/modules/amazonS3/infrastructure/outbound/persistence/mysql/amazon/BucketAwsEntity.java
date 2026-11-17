@@ -9,8 +9,13 @@ import java.io.Serializable;
 
 @Data
 @Entity
-@Table(name = "bucket_aws")
-public class BuketAwsEntity extends AuditInfo implements Serializable {
+@Table(name = "bucket_aws",
+        indexes = {
+                @Index(name = "idx_bucket_aws_application_id", columnList = "application_id"),
+                @Index(name = "idx_bucket_aws_project_name", columnList = "project_name"),
+                @Index(name = "idx_bucket_aws_bucket_name", columnList = "bucket_name")
+        })
+public class BucketAwsEntity extends AuditInfo implements Serializable {
 
     private static final long serialVersionUID = 1L;
 

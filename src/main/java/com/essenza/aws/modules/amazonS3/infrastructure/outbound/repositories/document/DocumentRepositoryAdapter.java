@@ -5,10 +5,12 @@ import com.essenza.aws.modules.amazonS3.domain.dto.document.CreateDocumentDto;
 import com.essenza.aws.modules.amazonS3.domain.dto.document.DocumentDto;
 import com.essenza.aws.modules.amazonS3.domain.dto.document.UpdateDocumentDto;
 import com.essenza.aws.modules.amazonS3.infrastructure.outbound.mappers.DocumentMapper;
+import com.essenza.aws.shared.exceptions.NotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
 
-import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -28,7 +30,7 @@ public class DocumentRepositoryAdapter implements DocumentRepository {
     @Override
     public DocumentDto update(Integer id, UpdateDocumentDto input) {
         var entity = jpaRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Document not found"));
+                .orElseThrow(() -> new NotFoundException("Documento no encontrado con id " + id));
         mapper.updateEntityFromDto(input, entity);
         var updated = jpaRepository.save(entity);
         return mapper.toDto(updated);
@@ -49,8 +51,8 @@ public class DocumentRepositoryAdapter implements DocumentRepository {
     }
 
     @Override
-    public List<DocumentDto> findAll() {
-        return jpaRepository.findAll().stream().map(mapper::toDto).toList();
+    public Page<DocumentDto> findAll(Pageable pageable) {
+        return jpaRepository.findAll(pageable).map(mapper::toDto);
     }
 
     @Override

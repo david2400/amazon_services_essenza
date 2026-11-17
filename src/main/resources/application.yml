@@ -23,6 +23,11 @@ spring:
     compose:
       enabled: ${DOCKER_COMPOSE_ENABLED:false}
 
+  servlet:
+    multipart:
+      max-file-size: ${MULTIPART_MAX_FILE_SIZE:10MB}
+      max-request-size: ${MULTIPART_MAX_REQUEST_SIZE:10MB}
+
 aws:
   access-key-id: ${AWS_ACCESS_KEY_ID:}
   secret-key: ${AWS_SECRET_ACCESS_KEY:}
@@ -40,3 +45,9 @@ aws:
     # Prefijos de clave servidos publicamente (separados por coma). Sus objetos se suben con
     # Cache-Control de larga duracion y Content-Disposition: inline. El resto del bucket no cambia.
     prefijos-publicos: ${AWS_S3_PREFIJOS_PUBLICOS:email/imagenes/}
+    # Timeout total amplio para cubrir subidas de archivos grandes
+    api-call-timeout: ${AWS_S3_API_CALL_TIMEOUT:120s}
+    api-call-attempt-timeout: ${AWS_S3_API_CALL_ATTEMPT_TIMEOUT:30s}
+    max-retries: ${AWS_S3_MAX_RETRIES:3}
+    # TTL maximo permitido para URLs prefirmadas de descarga
+    presigned-url-max-ttl: ${AWS_S3_PRESIGNED_URL_MAX_TTL:1h}

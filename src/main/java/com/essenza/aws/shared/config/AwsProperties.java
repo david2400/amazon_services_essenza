@@ -65,5 +65,20 @@ public class AwsProperties {
         /** Cache-Control para objetos públicos. Las claves son UUID y nunca se sobrescriben. */
         @NotNull
         private String cacheControlPublico = "public, max-age=31536000, immutable";
+
+        /** Timeout total de la llamada a S3 (debe cubrir subidas de archivos grandes). */
+        @NotNull
+        private Duration apiCallTimeout = Duration.ofMinutes(2);
+
+        /** Timeout por intento individual de la llamada a S3. */
+        @NotNull
+        private Duration apiCallAttemptTimeout = Duration.ofSeconds(30);
+
+        @Min(0)
+        private int maxRetries = 3;
+
+        /** TTL máximo permitido para URLs prefirmadas de descarga. */
+        @NotNull
+        private Duration presignedUrlMaxTtl = Duration.ofHours(1);
     }
 }

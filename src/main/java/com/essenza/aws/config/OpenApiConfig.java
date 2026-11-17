@@ -31,7 +31,7 @@ public class OpenApiConfig {
                         "/api/aws/files-amazon/**",
                         "/api/aws/document/**",
                         "/api/aws/document_bucket_aws/**",
-                        "/api/aws/buket_aws/**"
+                        "/api/aws/bucket_aws/**"
                 )
                 .build();
     }

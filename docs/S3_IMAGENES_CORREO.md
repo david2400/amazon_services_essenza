@@ -17,19 +17,19 @@ Las rutas reales llevan el prefijo `/api/aws` (`ApiPrefixConfiguration`).
 
 | Operación | Ruta | Parámetros | Respuesta |
 |---|---|---|---|
-| Subir | `POST /api/aws/files-amazon/subir_archivo` (multipart) | `file`, `bucket`, `carpeta` (= `email/imagenes/aaaa/mm`), `buket_aws_id` | JSON con `id`, `key`, `s3Url` (y el resto de `FilesAmazonS3Dto`) |
-| Borrar | `DELETE /api/aws/files-amazon/eliminar_archivo?clave=<key>&buketAwsId=<id>` | — | 200 con la lista del archivo borrado; **404** si no existe |
+| Subir | `POST /api/aws/files-amazon/subir_archivo` (multipart) | `file`, `bucket`, `carpeta` (= `email/imagenes/aaaa/mm`), `bucket_aws_id` | JSON con `id`, `key`, `s3Url` (y el resto de `FilesAmazonS3Dto`) |
+| Borrar | `DELETE /api/aws/files-amazon/eliminar_archivo?clave=<key>&bucketAwsId=<id>` | — | 200 con la lista del archivo borrado; **404** si no existe |
 
 Respuestas de error (JSON `{timestamp, status, error, message}`):
 
 | Caso | Código |
 |---|---|
 | `carpeta` con `..`, `\`, `//` o caracteres de control | 400 |
-| `bucket` distinto del `bucketName` registrado para `buket_aws_id`, o id no registrado | 400 |
+| `bucket` distinto del `bucketName` registrado para `bucket_aws_id`, o id no registrado | 400 |
 | Falta un parámetro obligatorio | 400 |
 | Archivo mayor que `spring.servlet.multipart.max-file-size` (10 MB) | 413 |
 | Sin token o token inválido (con `AWS_SERVICES_ENFORCE_AUTH=true`) | 401 |
-| `clave` + `buketAwsId` inexistente (o ya borrada) | 404 |
+| `clave` + `bucketAwsId` inexistente (o ya borrada) | 404 |
 | Fallo de S3 | 502 (mensaje genérico, sin trazas) |
 
 Al borrar, el objeto se elimina de S3 y la fila de `amazon_s3_files` queda con soft delete (`deleted = 1`);
@@ -192,7 +192,7 @@ mientras existan correos con esa URL, mantener la opción A evita imágenes rota
 
 ## Registro del bucket en `bucket_aws`
 
-notificacion necesita el `id` de ese registro en `IMAGENES_S3_BUKET_AWS_ID`. Al subir, este servicio
+notificacion necesita el `id` de ese registro en `IMAGENES_S3_BUCKET_AWS_ID`. Al subir, este servicio
 comprueba que el parámetro `bucket` sea igual al `bucket_name` registrado para ese id.
 
 ### SQL idempotente (MySQL)
@@ -208,7 +208,7 @@ WHERE NOT EXISTS (
     SELECT 1 FROM bucket_aws WHERE project_name = 'notificacion-correos' AND deleted = 0
 );
 
--- id para IMAGENES_S3_BUKET_AWS_ID
+-- id para IMAGENES_S3_BUCKET_AWS_ID
 SELECT id, project_name, bucket_name, bucket_folder
 FROM bucket_aws
 WHERE project_name = 'notificacion-correos' AND deleted = 0;
@@ -219,10 +219,10 @@ WHERE project_name = 'notificacion-correos' AND deleted = 0;
 Este endpoint **no** es idempotente: consulta primero.
 
 ```bash
-curl -s "http://localhost:8082/api/aws/buket_aws/informacion_buket?nombre_proyecto=notificacion-correos" \
+curl -s "http://localhost:8082/api/aws/bucket_aws/informacion_bucket?nombre_proyecto=notificacion-correos" \
   -H "Authorization: Bearer $TOKEN"
 # Si la respuesta viene vacía:
-curl -s -X POST http://localhost:8082/api/aws/buket_aws \
+curl -s -X POST http://localhost:8082/api/aws/bucket_aws \
   -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" \
   -d '{"projectName":"notificacion-correos","applicationId":1,"bucketName":"<bucket>","bucketFolder":"email/imagenes"}'
 ```
@@ -243,7 +243,7 @@ Requisitos: access_control en `http://localhost:8000`, este servicio en `http://
 `AWS_SERVICES_ENFORCE_AUTH=true`, la opción A aplicada y el registro de `bucket_aws` creado. Usa `jq`.
 
 ```bash
-export BUCKET=<bucket> REGION=us-east-1 BUKET_ID=<id de bucket_aws>
+export BUCKET=<bucket> REGION=us-east-1 BUCKET_ID=<id de bucket_aws>
 export CLIENT_SECRET=<secreto de notificacion-service>
 API=http://localhost:8082/api/aws/files-amazon
 
@@ -261,11 +261,11 @@ echo 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60
 
 # 3) Sin token: debe dar 401
 curl -s -o /dev/null -w '%{http_code}\n' -X POST "$API/subir_archivo" \
-  -F "file=@$NOMBRE;type=image/png" -F "bucket=$BUCKET" -F "carpeta=email/imagenes/$(date +%Y/%m)" -F "buket_aws_id=$BUKET_ID"
+  -F "file=@$NOMBRE;type=image/png" -F "bucket=$BUCKET" -F "carpeta=email/imagenes/$(date +%Y/%m)" -F "bucket_aws_id=$BUCKET_ID"
 
 # 4) Subir: 200 con id, key y s3Url
 RESP=$(curl -s -X POST "$API/subir_archivo" -H "Authorization: Bearer $TOKEN" \
-  -F "file=@$NOMBRE;type=image/png" -F "bucket=$BUCKET" -F "carpeta=email/imagenes/$(date +%Y/%m)" -F "buket_aws_id=$BUKET_ID")
+  -F "file=@$NOMBRE;type=image/png" -F "bucket=$BUCKET" -F "carpeta=email/imagenes/$(date +%Y/%m)" -F "bucket_aws_id=$BUCKET_ID")
 echo "$RESP" | jq '{id, key, s3Url}'
 KEY=$(echo "$RESP" | jq -r .key); URL=$(echo "$RESP" | jq -r .s3Url)
 
@@ -275,22 +275,22 @@ curl -sI "$URL" | grep -iE '^(HTTP|content-type|cache-control|content-dispositio
 
 # 6) Validaciones: ambas deben dar 400
 curl -s -o /dev/null -w '%{http_code}\n' -X POST "$API/subir_archivo" -H "Authorization: Bearer $TOKEN" \
-  -F "file=@$NOMBRE;type=image/png" -F "bucket=$BUCKET" -F "carpeta=email/../privado" -F "buket_aws_id=$BUKET_ID"
+  -F "file=@$NOMBRE;type=image/png" -F "bucket=$BUCKET" -F "carpeta=email/../privado" -F "bucket_aws_id=$BUCKET_ID"
 curl -s -o /dev/null -w '%{http_code}\n' -X POST "$API/subir_archivo" -H "Authorization: Bearer $TOKEN" \
-  -F "file=@$NOMBRE;type=image/png" -F "bucket=otro-bucket" -F "carpeta=email/imagenes/$(date +%Y/%m)" -F "buket_aws_id=$BUKET_ID"
+  -F "file=@$NOMBRE;type=image/png" -F "bucket=otro-bucket" -F "carpeta=email/imagenes/$(date +%Y/%m)" -F "bucket_aws_id=$BUCKET_ID"
 
 # 7) Objeto FUERA del prefijo: se sube bien, pero su URL sin credenciales debe dar 403
 RESP_PRIV=$(curl -s -X POST "$API/subir_archivo" -H "Authorization: Bearer $TOKEN" \
-  -F "file=@$NOMBRE;type=image/png" -F "bucket=$BUCKET" -F "carpeta=pruebas/privado" -F "buket_aws_id=$BUKET_ID")
+  -F "file=@$NOMBRE;type=image/png" -F "bucket=$BUCKET" -F "carpeta=pruebas/privado" -F "bucket_aws_id=$BUCKET_ID")
 curl -s -o /dev/null -w '%{http_code}\n' "$(echo "$RESP_PRIV" | jq -r .s3Url)"
 curl -s -X DELETE -H "Authorization: Bearer $TOKEN" \
-  "$API/eliminar_archivo?clave=$(echo "$RESP_PRIV" | jq -r .key)&buketAwsId=$BUKET_ID" > /dev/null
+  "$API/eliminar_archivo?clave=$(echo "$RESP_PRIV" | jq -r .key)&bucketAwsId=$BUCKET_ID" > /dev/null
 
 # 8) Borrar: 200; repetir: 404; la URL pública deja de responder (403)
 curl -s -o /dev/null -w '%{http_code}\n' -X DELETE -H "Authorization: Bearer $TOKEN" \
-  "$API/eliminar_archivo?clave=$KEY&buketAwsId=$BUKET_ID"
+  "$API/eliminar_archivo?clave=$KEY&bucketAwsId=$BUCKET_ID"
 curl -s -o /dev/null -w '%{http_code}\n' -X DELETE -H "Authorization: Bearer $TOKEN" \
-  "$API/eliminar_archivo?clave=$KEY&buketAwsId=$BUKET_ID"
+  "$API/eliminar_archivo?clave=$KEY&bucketAwsId=$BUCKET_ID"
 curl -s -o /dev/null -w '%{http_code}\n' "$URL"
 ```
 
@@ -310,5 +310,5 @@ SELECT id_files_amazon_s3, `key`, deleted FROM amazon_s3_files WHERE `key` = '<K
 | `AWS_S3_PREFIJOS_PUBLICOS` | amazon_services_essenza | `email/imagenes/` | Prefijos (separados por coma) que se suben con caché de un año e `inline` |
 | `AWS_REGION` | amazon_services_essenza | `us-east-1` | Región usada en la `s3Url` regional |
 | `AWS_SERVICES_ENFORCE_AUTH` | amazon_services_essenza | `false` | Debe ser `true` en producción |
-| `IMAGENES_S3_BUKET_AWS_ID` | notificacion | — | `id` del registro `notificacion-correos` en `bucket_aws` |
+| `IMAGENES_S3_BUCKET_AWS_ID` | notificacion | — | `id` del registro `notificacion-correos` en `bucket_aws` |
 | `IMAGENES_URL_PUBLICA_BASE` | notificacion | — | Solo con CloudFront (opción B) |

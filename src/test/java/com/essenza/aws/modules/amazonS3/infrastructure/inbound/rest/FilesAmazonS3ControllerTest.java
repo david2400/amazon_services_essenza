@@ -7,14 +7,15 @@ import com.essenza.aws.modules.amazonS3.application.input.files_amazon.FindFiles
 import com.essenza.aws.modules.amazonS3.application.input.files_amazon.FindFilesAmazonS3ByDocumentIdUseCase;
 import com.essenza.aws.modules.amazonS3.application.input.files_amazon.FindFilesAmazonS3ByParentIdUseCase;
 import com.essenza.aws.modules.amazonS3.application.input.files_amazon.FindFilesAmazonS3UseCase;
+import com.essenza.aws.modules.amazonS3.application.input.files_amazon.LinkFileToBucketUseCase;
 import com.essenza.aws.modules.amazonS3.application.input.files_amazon.ReplaceFileUseCase;
 import com.essenza.aws.modules.amazonS3.application.input.files_amazon.UpdateDocumentIdUseCase;
 import com.essenza.aws.modules.amazonS3.application.input.files_amazon.UpdateFilesAmazonS3UseCase;
 import com.essenza.aws.modules.amazonS3.application.input.files_amazon.UploadFileUseCase;
 import com.essenza.aws.modules.amazonS3.domain.dto.files_amazons3.FilesAmazonS3Dto;
-import com.essenza.aws.modules.amazonS3.domain.exception.AmazonS3StorageException;
-import com.essenza.aws.modules.amazonS3.domain.exception.ResourceNotFoundException;
+import com.essenza.aws.shared.exceptions.AwsServiceException;
 import com.essenza.aws.shared.exceptions.GlobalExceptionHandler;
+import com.essenza.aws.shared.exceptions.NotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockMultipartFile;
@@ -62,7 +63,8 @@ class FilesAmazonS3ControllerTest {
                 mock(FindFilesAmazonS3UseCase.class),
                 mock(FindFilesAmazonS3ByDocumentIdUseCase.class),
                 mock(FindFilesAmazonS3ByBucketAwsIdUseCase.class),
-                mock(FindFilesAmazonS3ByParentIdUseCase.class));
+                mock(FindFilesAmazonS3ByParentIdUseCase.class),
+                mock(LinkFileToBucketUseCase.class));
         mockMvc = MockMvcBuilders.standaloneSetup(controller)
                 .setControllerAdvice(new AmazonS3ExceptionHandler(), new GlobalExceptionHandler())
                 .build();
@@ -70,7 +72,7 @@ class FilesAmazonS3ControllerTest {
 
     @Test
     void subirArchivoDevuelveIdKeyYS3UrlEnCamelCase() throws Exception {
-        when(uploadUseCase.upload(any(), eq("essenza-correos"), eq("email/imagenes/2026/11"), any(), anyString()))
+        when(uploadUseCase.upload(any(), eq("essenza-correos"), eq("email/imagenes/2026/11"), any()))
                 .thenReturn(FilesAmazonS3Dto.builder().id(42L).key(KEY).s3Url(URL).bucketAwsId(7L)
                         .fileName("3f2a9c1e-0000-4000-8000-000000000001.png").build());
 
@@ -78,7 +80,7 @@ class FilesAmazonS3ControllerTest {
                         .file(new MockMultipartFile("file", "3f2a9c1e-0000-4000-8000-000000000001.png", "image/png", new byte[]{1}))
                         .param("bucket", "essenza-correos")
                         .param("carpeta", "email/imagenes/2026/11")
-                        .param("buket_aws_id", "7"))
+                        .param("bucket_aws_id", "7"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(42))
                 .andExpect(jsonPath("$.key").value(KEY))
@@ -87,37 +89,37 @@ class FilesAmazonS3ControllerTest {
 
     @Test
     void subirConBucketAjenoResponde400() throws Exception {
-        when(uploadUseCase.upload(any(), anyString(), anyString(), any(), anyString()))
-                .thenThrow(new IllegalArgumentException("El bucket indicado no corresponde al buket_aws_id 7"));
+        when(uploadUseCase.upload(any(), anyString(), anyString(), any()))
+                .thenThrow(new IllegalArgumentException("El bucket indicado no corresponde al bucket_aws_id 7"));
 
         mockMvc.perform(multipart("/files-amazon/subir_archivo")
                         .file(new MockMultipartFile("file", "a.png", "image/png", new byte[]{1}))
                         .param("bucket", "otro-bucket")
                         .param("carpeta", "email/imagenes/2026/11")
-                        .param("buket_aws_id", "7"))
+                        .param("bucket_aws_id", "7"))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.status").value(400));
     }
 
     @Test
     void eliminarArchivoInexistenteResponde404() throws Exception {
-        when(deleteUseCase.deleteByKeyAndBucket(eq(KEY), eq(7L), anyString()))
-                .thenThrow(new ResourceNotFoundException("No se encontró archivo con key " + KEY + " y bucketAwsId 7"));
+        when(deleteUseCase.deleteByKeyAndBucket(eq(KEY), eq(7L)))
+                .thenThrow(new NotFoundException("No se encontró archivo con key " + KEY + " y bucketAwsId 7"));
 
-        mockMvc.perform(delete("/files-amazon/eliminar_archivo").param("clave", KEY).param("buketAwsId", "7"))
+        mockMvc.perform(delete("/files-amazon/eliminar_archivo").param("clave", KEY).param("bucketAwsId", "7"))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.status").value(404));
     }
 
     @Test
     void errorDeS3AlEliminarResponde502SinTrazas() throws Exception {
-        when(deleteUseCase.deleteByKeyAndBucket(eq(KEY), eq(7L), anyString()))
-                .thenThrow(new AmazonS3StorageException("Failed to delete object from S3",
+        when(deleteUseCase.deleteByKeyAndBucket(eq(KEY), eq(7L)))
+                .thenThrow(new AwsServiceException("Failed to delete object from S3", "InternalError",
                         new RuntimeException("detalle interno del SDK")));
 
-        mockMvc.perform(delete("/files-amazon/eliminar_archivo").param("clave", KEY).param("buketAwsId", "7"))
+        mockMvc.perform(delete("/files-amazon/eliminar_archivo").param("clave", KEY).param("bucketAwsId", "7"))
                 .andExpect(status().isBadGateway())
-                .andExpect(jsonPath("$.message").value("Error al comunicarse con Amazon S3: Failed to delete object from S3"))
+                .andExpect(jsonPath("$.message").value("Failed to delete object from S3"))
                 .andExpect(content().string(not(containsString("detalle interno"))))
                 .andExpect(content().string(not(containsString("Exception"))));
     }

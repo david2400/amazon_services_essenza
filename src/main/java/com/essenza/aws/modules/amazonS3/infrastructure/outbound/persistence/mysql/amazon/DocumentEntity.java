@@ -6,7 +6,8 @@ import lombok.Data;
 
 @Data
 @Entity
-@Table(name = "documents")
+@Table(name = "documents",
+        indexes = @Index(name = "idx_documents_name", columnList = "name"))
 public class DocumentEntity extends AuditInfo {
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)

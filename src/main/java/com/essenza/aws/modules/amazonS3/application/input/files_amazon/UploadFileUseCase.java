@@ -8,6 +8,5 @@ public interface UploadFileUseCase {
     FilesAmazonS3Dto upload(MultipartFile file,
                             String bucket,
                             String folder,
-                            CreateFilesAmazonS3Dto meta,
-                            String userId);
+                            CreateFilesAmazonS3Dto meta);
 }

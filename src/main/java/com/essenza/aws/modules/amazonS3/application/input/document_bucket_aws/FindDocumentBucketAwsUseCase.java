@@ -1,9 +1,9 @@
 package com.essenza.aws.modules.amazonS3.application.input.document_bucket_aws;
 
 import com.essenza.aws.modules.amazonS3.domain.dto.document_bucket_aws.DocumentBucketAwsDto;
-
-import java.util.List;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 public interface FindDocumentBucketAwsUseCase {
-    List<DocumentBucketAwsDto> findAll();
+    Page<DocumentBucketAwsDto> findAll(Pageable pageable);
 }

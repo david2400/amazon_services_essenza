@@ -4,5 +4,5 @@ import com.essenza.aws.modules.amazonS3.domain.dto.document_bucket_aws.DocumentB
 import com.essenza.aws.modules.amazonS3.domain.dto.document_bucket_aws.UpdateDocumentBucketAwsDto;
 
 public interface UpdateDocumentBucketAwsUseCase {
-    DocumentBucketAwsDto update(Long id, UpdateDocumentBucketAwsDto input);
+    DocumentBucketAwsDto update(Integer documentId, Long bucketAwsId, UpdateDocumentBucketAwsDto input);
 }

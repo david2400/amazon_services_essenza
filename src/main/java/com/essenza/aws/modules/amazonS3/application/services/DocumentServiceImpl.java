@@ -6,15 +6,16 @@ import com.essenza.aws.modules.amazonS3.application.input.document.FindDocumentB
 import com.essenza.aws.modules.amazonS3.application.input.document.FindDocumentByNameUseCase;
 import com.essenza.aws.modules.amazonS3.application.input.document.FindDocumentsUseCase;
 import com.essenza.aws.modules.amazonS3.application.input.document.UpdateDocumentUseCase;
+import com.essenza.aws.modules.amazonS3.application.output.repository.DocumentRepository;
 import com.essenza.aws.modules.amazonS3.domain.dto.document.CreateDocumentDto;
 import com.essenza.aws.modules.amazonS3.domain.dto.document.DocumentDto;
 import com.essenza.aws.modules.amazonS3.domain.dto.document.UpdateDocumentDto;
-import com.essenza.aws.modules.amazonS3.infrastructure.outbound.repositories.document.DocumentRepositoryAdapter;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
 import java.util.Optional;
 
 @RequiredArgsConstructor
@@ -28,11 +29,7 @@ public class DocumentServiceImpl implements
         FindDocumentsUseCase,
         FindDocumentByNameUseCase {
 
-    private final DocumentRepositoryAdapter repository;
-
-//    public DocumentServiceImpl(DocumentRepositoryAdapter repository) {
-//        this.repository = repository;
-//    }
+    private final DocumentRepository repository;
 
     @Override
     public DocumentDto create(CreateDocumentDto input) {
@@ -57,8 +54,8 @@ public class DocumentServiceImpl implements
 
     @Override
     @Transactional(readOnly = true)
-    public List<DocumentDto> findAll() {
-        return repository.findAll();
+    public Page<DocumentDto> findAll(Pageable pageable) {
+        return repository.findAll(pageable);
     }
 
     @Override

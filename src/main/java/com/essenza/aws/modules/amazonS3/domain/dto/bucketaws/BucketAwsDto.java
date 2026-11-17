@@ -1,4 +1,4 @@
-package com.essenza.aws.modules.amazonS3.domain.dto.buketaws;
+package com.essenza.aws.modules.amazonS3.domain.dto.bucketaws;
 
 import com.essenza.aws.shared.common.domain.dto.AuditInfoDto;
 import lombok.AllArgsConstructor;
@@ -10,7 +10,7 @@ import lombok.experimental.SuperBuilder;
 @SuperBuilder
 @NoArgsConstructor
 @AllArgsConstructor
-public class BuketAwsDto extends AuditInfoDto {
+public class BucketAwsDto extends AuditInfoDto {
     private Long id;
     private String projectName;
     private Integer applicationId;

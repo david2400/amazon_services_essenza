@@ -1,8 +1,8 @@
-package com.essenza.aws.modules.amazonS3.application.input.buketaws;
+package com.essenza.aws.modules.amazonS3.application.input.bucketaws;
 
-import com.essenza.aws.modules.amazonS3.domain.dto.buketaws.BuketAwsDto;
-import com.essenza.aws.modules.amazonS3.domain.dto.buketaws.CreateBuketAwsDto;
+import com.essenza.aws.modules.amazonS3.domain.dto.bucketaws.BucketAwsDto;
+import com.essenza.aws.modules.amazonS3.domain.dto.bucketaws.CreateBucketAwsDto;
 
-public interface CreateBuketAwsUseCase {
-    BuketAwsDto create(CreateBuketAwsDto input);
+public interface CreateBucketAwsUseCase {
+    BucketAwsDto create(CreateBucketAwsDto input);
 }

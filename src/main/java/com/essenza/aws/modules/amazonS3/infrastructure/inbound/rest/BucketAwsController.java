@@ -5,54 +5,41 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import com.essenza.aws.modules.amazonS3.application.input.buketaws.FindBuketAwsByApplicationIdUseCase;
-import com.essenza.aws.modules.amazonS3.application.input.buketaws.FindBuketAwsByProjectNameUseCase;
-import com.essenza.aws.modules.amazonS3.application.input.buketaws.CreateBuketAwsUseCase;
-import com.essenza.aws.modules.amazonS3.application.input.buketaws.UpdateBuketAwsUseCase;
-import com.essenza.aws.modules.amazonS3.application.input.buketaws.DeleteBuketAwsUseCase;
-import com.essenza.aws.modules.amazonS3.application.input.buketaws.FindBuketAwsByIdUseCase;
-import com.essenza.aws.modules.amazonS3.application.input.buketaws.FindBuketAwsUseCase;
-import com.essenza.aws.modules.amazonS3.domain.dto.buketaws.BuketAwsDto;
-import com.essenza.aws.modules.amazonS3.domain.dto.buketaws.CreateBuketAwsDto;
-import com.essenza.aws.modules.amazonS3.domain.dto.buketaws.UpdateBuketAwsDto;
+import com.essenza.aws.modules.amazonS3.application.input.bucketaws.FindBucketAwsByApplicationIdUseCase;
+import com.essenza.aws.modules.amazonS3.application.input.bucketaws.FindBucketAwsByProjectNameUseCase;
+import com.essenza.aws.modules.amazonS3.application.input.bucketaws.CreateBucketAwsUseCase;
+import com.essenza.aws.modules.amazonS3.application.input.bucketaws.UpdateBucketAwsUseCase;
+import com.essenza.aws.modules.amazonS3.application.input.bucketaws.DeleteBucketAwsUseCase;
+import com.essenza.aws.modules.amazonS3.application.input.bucketaws.FindBucketAwsByIdUseCase;
+import com.essenza.aws.modules.amazonS3.application.input.bucketaws.FindBucketAwsUseCase;
+import com.essenza.aws.modules.amazonS3.domain.dto.bucketaws.BucketAwsDto;
+import com.essenza.aws.modules.amazonS3.domain.dto.bucketaws.CreateBucketAwsDto;
+import com.essenza.aws.modules.amazonS3.domain.dto.bucketaws.UpdateBucketAwsDto;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.context.annotation.Description;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-
 @RequiredArgsConstructor
 @RestController
-@RequestMapping("/buket_aws")
-@Description(value = "Gestiona parametros de buket de Amazon s3")
+@RequestMapping("/bucket_aws")
+@Description(value = "Gestiona parametros de bucket de Amazon s3")
 @Tag(name = "Amazon S3 - Buckets")
-public class BuketAwsController {
+public class BucketAwsController {
 
-    private final FindBuketAwsByProjectNameUseCase findByProjectName;
-    private final FindBuketAwsByApplicationIdUseCase findByApplicationId;
-    private final CreateBuketAwsUseCase createBuketAws;
-    private final UpdateBuketAwsUseCase updateBuketAws;
-    private final DeleteBuketAwsUseCase deleteBuketAws;
-    private final FindBuketAwsByIdUseCase findBuketAwsById;
-    private final FindBuketAwsUseCase findBuketAws;
-
-//    public BuketAwsController(FindBuketAwsByProjectNameUseCase findByProjectName,
-//                              FindBuketAwsByApplicationIdUseCase findByApplicationId,
-//                              CreateBuketAwsUseCase createBuketAws,
-//                              UpdateBuketAwsUseCase updateBuketAws,
-//                              DeleteBuketAwsUseCase deleteBuketAws,
-//                              FindBuketAwsByIdUseCase findBuketAwsById,
-//                              FindBuketAwsUseCase findBuketAws) {
-//        this.findByProjectName = findByProjectName;
-//        this.findByApplicationId = findByApplicationId;
-//        this.createBuketAws = createBuketAws;
-//        this.updateBuketAws = updateBuketAws;
-//        this.deleteBuketAws = deleteBuketAws;
-//        this.findBuketAwsById = findBuketAwsById;
-//        this.findBuketAws = findBuketAws;
-//    }
+    private final FindBucketAwsByProjectNameUseCase findByProjectName;
+    private final FindBucketAwsByApplicationIdUseCase findByApplicationId;
+    private final CreateBucketAwsUseCase createBucketAws;
+    private final UpdateBucketAwsUseCase updateBucketAws;
+    private final DeleteBucketAwsUseCase deleteBucketAws;
+    private final FindBucketAwsByIdUseCase findBucketAwsById;
+    private final FindBucketAwsUseCase findBucketAws;
 
     @PostMapping
     @Operation(summary = "Crear un bucket lógico de Amazon S3")
@@ -61,8 +48,8 @@ public class BuketAwsController {
             @ApiResponse(responseCode = "400", description = "Datos inválidos"),
             @ApiResponse(responseCode = "500", description = "Error interno")
     })
-    public ResponseEntity<BuketAwsDto> crearBuket(@RequestBody CreateBuketAwsDto dto) {
-        BuketAwsDto created = createBuketAws.create(dto);
+    public ResponseEntity<BucketAwsDto> crearBucket(@Valid @RequestBody CreateBucketAwsDto dto) {
+        BucketAwsDto created = createBucketAws.create(dto);
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
 
@@ -74,9 +61,9 @@ public class BuketAwsController {
             @ApiResponse(responseCode = "400", description = "Datos inválidos"),
             @ApiResponse(responseCode = "500", description = "Error interno")
     })
-    public ResponseEntity<BuketAwsDto> actualizarBuket(@PathVariable("id") Long id,
-                                                       @RequestBody UpdateBuketAwsDto dto) {
-        BuketAwsDto updated = updateBuketAws.update(id, dto);
+    public ResponseEntity<BucketAwsDto> actualizarBucket(@PathVariable("id") Long id,
+                                                       @Valid @RequestBody UpdateBucketAwsDto dto) {
+        BucketAwsDto updated = updateBucketAws.update(id, dto);
         return ResponseEntity.ok(updated);
     }
 
@@ -87,8 +74,8 @@ public class BuketAwsController {
             @ApiResponse(responseCode = "404", description = "Bucket no encontrado"),
             @ApiResponse(responseCode = "500", description = "Error interno")
     })
-    public ResponseEntity<Void> eliminarBuket(@PathVariable("id") Long id) {
-        boolean deleted = deleteBuketAws.deleteById(id);
+    public ResponseEntity<Void> eliminarBucket(@PathVariable("id") Long id) {
+        boolean deleted = deleteBucketAws.deleteById(id);
         return deleted ? ResponseEntity.noContent().build() : ResponseEntity.status(HttpStatus.NOT_FOUND).build();
     }
 
@@ -99,49 +86,48 @@ public class BuketAwsController {
             @ApiResponse(responseCode = "404", description = "No encontrado"),
             @ApiResponse(responseCode = "500", description = "Error interno")
     })
-    public ResponseEntity<BuketAwsDto> informacionBuketById(@PathVariable("id") Long id) {
-        return findBuketAwsById.findById(id)
+    public ResponseEntity<BucketAwsDto> informacionBucketById(@PathVariable("id") Long id) {
+        return findBucketAwsById.findById(id)
                 .map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND).build());
     }
 
-    @GetMapping("/informacion_buket")
+    @GetMapping("/informacion_bucket")
     @Operation(summary = "Consultar bucket por nombre de proyecto")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Bucket encontrado"),
             @ApiResponse(responseCode = "404", description = "No encontrado"),
             @ApiResponse(responseCode = "500", description = "Error interno")
     })
-    public BuketAwsDto informacionBuket(
+    public BucketAwsDto informacionBucket(
             @Parameter(description = "Es el nombre del proyecto ") @RequestParam(defaultValue = "0", value = "nombre_proyecto") String nombreProyecto) {
 
         return findByProjectName.findByProjectName(nombreProyecto).orElse(null);
     }
 
-    @GetMapping("/informacion_buket_by_aplicacion_id")
-    @Operation(summary = "Consultar bucket por ID de aplicación")
+    @GetMapping("/informacion_bucket_by_aplicacion_id")
+    @Operation(summary = "Consultar buckets por ID de aplicación (paginado)")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Bucket encontrado"),
-            @ApiResponse(responseCode = "404", description = "No encontrado"),
+            @ApiResponse(responseCode = "200", description = "Listado obtenido"),
             @ApiResponse(responseCode = "500", description = "Error interno")
     })
-    public BuketAwsDto informacionBuketByAplicacionId(
-            @Parameter(description = "Es el id de la aplicación ") @RequestParam(defaultValue = "0", value = "aplicacion_id") Integer aplicacionId) {
+    public Page<BucketAwsDto> informacionBucketByAplicacionId(
+            @Parameter(description = "Es el id de la aplicación ") @RequestParam(value = "aplicacion_id") Integer aplicacionId,
+            @ParameterObject @PageableDefault(size = 20) Pageable pageable) {
 
-        return findByApplicationId.findByApplicationId(aplicacionId).stream().findFirst().orElse(null);
+        return findByApplicationId.findByApplicationId(aplicacionId, pageable);
     }
 
 
 
-    @GetMapping("/listar_bukets")
-    @Operation(summary = "Listar todos los buckets registrados")
+    @GetMapping("/listar_buckets")
+    @Operation(summary = "Listar todos los buckets registrados (paginado)")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Listado obtenido"),
-            @ApiResponse(responseCode = "204", description = "Sin datos"),
             @ApiResponse(responseCode = "500", description = "Error interno")
     })
-    public List<BuketAwsDto> listarBukets() {
-        return findBuketAws.findAll();
+    public Page<BucketAwsDto> listarBuckets(@ParameterObject @PageableDefault(size = 20) Pageable pageable) {
+        return findBucketAws.findAll(pageable);
     }
 
 

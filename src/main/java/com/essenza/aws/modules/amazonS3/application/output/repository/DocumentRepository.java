@@ -3,8 +3,9 @@ package com.essenza.aws.modules.amazonS3.application.output.repository;
 import com.essenza.aws.modules.amazonS3.domain.dto.document.CreateDocumentDto;
 import com.essenza.aws.modules.amazonS3.domain.dto.document.DocumentDto;
 import com.essenza.aws.modules.amazonS3.domain.dto.document.UpdateDocumentDto;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
-import java.util.List;
 import java.util.Optional;
 
 public interface DocumentRepository {
@@ -17,7 +18,7 @@ public interface DocumentRepository {
 
     Optional<DocumentDto> findById(Integer id);
 
-    List<DocumentDto> findAll();
+    Page<DocumentDto> findAll(Pageable pageable);
 
     Optional<DocumentDto> findByName(String name);
 }

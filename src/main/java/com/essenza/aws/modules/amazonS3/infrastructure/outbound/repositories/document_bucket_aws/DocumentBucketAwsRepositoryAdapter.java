@@ -5,10 +5,13 @@ import com.essenza.aws.modules.amazonS3.domain.dto.document_bucket_aws.CreateDoc
 import com.essenza.aws.modules.amazonS3.domain.dto.document_bucket_aws.DocumentBucketAwsDto;
 import com.essenza.aws.modules.amazonS3.domain.dto.document_bucket_aws.UpdateDocumentBucketAwsDto;
 import com.essenza.aws.modules.amazonS3.infrastructure.outbound.mappers.DocumentBucketAwsMapper;
+import com.essenza.aws.modules.amazonS3.infrastructure.outbound.persistence.mysql.amazon.DocumentBucketAws.DocumentBucketAwsId;
+import com.essenza.aws.shared.exceptions.NotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
 
-import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -26,16 +29,18 @@ public class DocumentBucketAwsRepositoryAdapter implements DocumentBucketAwsRepo
     }
 
     @Override
-    public DocumentBucketAwsDto update(Long id, UpdateDocumentBucketAwsDto input) {
-        var entity = jpaRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("DocumentBucketAws not found"));
+    public DocumentBucketAwsDto update(Integer documentId, Long bucketAwsId, UpdateDocumentBucketAwsDto input) {
+        var entity = jpaRepository.findById(compositeId(documentId, bucketAwsId))
+                .orElseThrow(() -> new NotFoundException(
+                        "Relación documento-bucket no encontrada (documentId " + documentId + ", bucketAwsId " + bucketAwsId + ")"));
         mapper.updateEntityFromDto(input, entity);
         var updated = jpaRepository.save(entity);
         return mapper.toDto(updated);
     }
 
     @Override
-    public boolean deleteById(Long id) {
+    public boolean deleteById(Integer documentId, Long bucketAwsId) {
+        var id = compositeId(documentId, bucketAwsId);
         if (jpaRepository.existsById(id)) {
             jpaRepository.deleteById(id);
             return true;
@@ -44,22 +49,26 @@ public class DocumentBucketAwsRepositoryAdapter implements DocumentBucketAwsRepo
     }
 
     @Override
-    public Optional<DocumentBucketAwsDto> findById(Long id) {
-        return jpaRepository.findById(id).map(mapper::toDto);
+    public Optional<DocumentBucketAwsDto> findById(Integer documentId, Long bucketAwsId) {
+        return jpaRepository.findById(compositeId(documentId, bucketAwsId)).map(mapper::toDto);
     }
 
     @Override
-    public List<DocumentBucketAwsDto> findAll() {
-        return jpaRepository.findAll().stream().map(mapper::toDto).toList();
+    public Page<DocumentBucketAwsDto> findAll(Pageable pageable) {
+        return jpaRepository.findAll(pageable).map(mapper::toDto);
     }
 
     @Override
-    public List<DocumentBucketAwsDto> findByDocumentId(Integer documentId) {
-        return jpaRepository.findByDocumentId(documentId).stream().map(mapper::toDto).toList();
+    public Page<DocumentBucketAwsDto> findByDocumentId(Integer documentId, Pageable pageable) {
+        return jpaRepository.findByDocumentId(documentId, pageable).map(mapper::toDto);
     }
 
     @Override
-    public List<DocumentBucketAwsDto> findByBucketAwsId(Long bucketAwsId) {
-        return jpaRepository.findByBucketAwsId(bucketAwsId).stream().map(mapper::toDto).toList();
+    public Page<DocumentBucketAwsDto> findByBucketAwsId(Long bucketAwsId, Pageable pageable) {
+        return jpaRepository.findByBucketAwsId(bucketAwsId, pageable).map(mapper::toDto);
+    }
+
+    private DocumentBucketAwsId compositeId(Integer documentId, Long bucketAwsId) {
+        return new DocumentBucketAwsId(documentId, bucketAwsId);
     }
 }
